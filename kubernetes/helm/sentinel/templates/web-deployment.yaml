@@ -1,0 +1,50 @@
+{{- if .Values.web.enabled }}
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "sentinel.fullname" . }}-web
+  namespace: {{ .Values.namespaces.platform }}
+  labels:
+    {{- include "sentinel.labels" . | nindent 4 }}
+    app.kubernetes.io/component: web
+spec:
+  {{- if not .Values.web.autoscaling.enabled }}
+  replicas: {{ .Values.web.replicaCount }}
+  {{- end }}
+  selector:
+    matchLabels:
+      {{- include "sentinel.selectorLabels" . | nindent 6 }}
+      app.kubernetes.io/component: web
+  template:
+    metadata:
+      labels:
+        {{- include "sentinel.selectorLabels" . | nindent 8 }}
+        app.kubernetes.io/component: web
+    spec:
+      securityContext:
+        {{- toYaml .Values.podSecurityContext | nindent 8 }}
+      containers:
+        - name: web
+          image: {{ include "sentinel.image" (dict "repository" .Values.web.image.repository "tag" .Values.image.tag "Values" .Values "Chart" .Chart) }}
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          securityContext:
+            {{- toYaml .Values.securityContext | nindent 12 }}
+          ports:
+            - name: http
+              containerPort: 8080
+              protocol: TCP
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: http
+            initialDelaySeconds: 10
+            periodSeconds: 15
+          readinessProbe:
+            httpGet:
+              path: /health
+              port: http
+            initialDelaySeconds: 5
+            periodSeconds: 10
+          resources:
+            {{- toYaml .Values.web.resources | nindent 12 }}
+{{- end }}

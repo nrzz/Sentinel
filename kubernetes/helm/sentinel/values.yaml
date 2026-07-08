@@ -1,0 +1,300 @@
+# Global settings
+global:
+  imageRegistry: ""
+  imagePullSecrets: []
+  storageClass: ""
+
+# Namespace configuration
+namespaces:
+  system: sentinel-system
+  platform: sentinel-platform
+
+# Image settings shared across application workloads
+image:
+  registry: ghcr.io
+  repository: sentinel
+  pullPolicy: IfNotPresent
+  tag: ""  # defaults to Chart.appVersion
+
+# External database option — set enabled: true to use managed/external services
+externalDatabase:
+  postgresql:
+    enabled: false
+    host: ""
+    port: 5432
+    database: sentinel
+    username: sentinel
+    existingSecret: ""
+    existingSecretPasswordKey: password
+  clickhouse:
+    enabled: false
+    host: ""
+    port: 8123
+    database: sentinel
+    username: default
+    existingSecret: ""
+    existingSecretPasswordKey: password
+  redis:
+    enabled: false
+    host: ""
+    port: 6379
+    existingSecret: ""
+    existingSecretPasswordKey: password
+  rabbitmq:
+    enabled: false
+    host: ""
+    port: 5672
+    username: sentinel
+    vhost: /
+    existingSecret: ""
+    existingSecretPasswordKey: password
+
+# API service
+api:
+  enabled: true
+  replicaCount: 2
+  image:
+    repository: sentinel-api
+  service:
+    type: ClusterIP
+    port: 8080
+    grpcPort: 8081
+  resources:
+    requests:
+      cpu: 250m
+      memory: 512Mi
+    limits:
+      cpu: "2"
+      memory: 2Gi
+  autoscaling:
+    enabled: true
+    minReplicas: 2
+    maxReplicas: 10
+    targetCPUUtilizationPercentage: 70
+    targetMemoryUtilizationPercentage: 80
+  pdb:
+    enabled: true
+    minAvailable: 1
+  env: {}
+  extraEnv: []
+
+# Worker service
+worker:
+  enabled: true
+  replicaCount: 2
+  image:
+    repository: sentinel-worker
+  service:
+    type: ClusterIP
+    port: 8080
+  resources:
+    requests:
+      cpu: 250m
+      memory: 512Mi
+    limits:
+      cpu: "2"
+      memory: 2Gi
+  autoscaling:
+    enabled: true
+    minReplicas: 2
+    maxReplicas: 8
+    targetCPUUtilizationPercentage: 75
+  pdb:
+    enabled: true
+    minAvailable: 1
+  env: {}
+  extraEnv: []
+
+# Web frontend
+web:
+  enabled: true
+  replicaCount: 2
+  image:
+    repository: sentinel-web
+  service:
+    type: ClusterIP
+    port: 8080
+  resources:
+    requests:
+      cpu: 100m
+      memory: 128Mi
+    limits:
+      cpu: 500m
+      memory: 512Mi
+  autoscaling:
+    enabled: true
+    minReplicas: 2
+    maxReplicas: 6
+    targetCPUUtilizationPercentage: 70
+  pdb:
+    enabled: true
+    minAvailable: 1
+
+# Embedded PostgreSQL (disabled when externalDatabase.postgresql.enabled)
+postgresql:
+  enabled: true
+  image:
+    repository: postgres
+    tag: "17-alpine"
+  auth:
+    database: sentinel
+    username: sentinel
+    password: ""  # generated if empty
+  persistence:
+    enabled: true
+    size: 50Gi
+  resources:
+    requests:
+      cpu: 250m
+      memory: 512Mi
+    limits:
+      cpu: "2"
+      memory: 4Gi
+  service:
+    port: 5432
+
+# Embedded ClickHouse
+clickhouse:
+  enabled: true
+  image:
+    repository: clickhouse/clickhouse-server
+    tag: "24.8"
+  auth:
+    database: sentinel
+    username: default
+    password: ""
+  persistence:
+    enabled: true
+    size: 100Gi
+  resources:
+    requests:
+      cpu: 500m
+      memory: 2Gi
+    limits:
+      cpu: "4"
+      memory: 8Gi
+  service:
+    httpPort: 8123
+    nativePort: 9000
+
+# Embedded Redis
+redis:
+  enabled: true
+  image:
+    repository: redis
+    tag: "7-alpine"
+  auth:
+    enabled: false
+    password: ""
+  persistence:
+    enabled: true
+    size: 10Gi
+  resources:
+    requests:
+      cpu: 100m
+      memory: 256Mi
+    limits:
+      cpu: 500m
+      memory: 1Gi
+  service:
+    port: 6379
+
+# Embedded RabbitMQ
+rabbitmq:
+  enabled: true
+  image:
+    repository: rabbitmq
+    tag: "3.13-management-alpine"
+  auth:
+    username: sentinel
+    password: ""
+    erlangCookie: ""
+  persistence:
+    enabled: true
+    size: 20Gi
+  resources:
+    requests:
+      cpu: 250m
+      memory: 512Mi
+    limits:
+      cpu: "1"
+      memory: 2Gi
+  service:
+    amqpPort: 5672
+    managementPort: 15672
+
+# Application configuration
+config:
+  sentinel:
+    serviceName: sentinel-api
+    environment: production
+  jwt:
+    issuer: sentinel
+    audience: sentinel-api
+    accessTokenExpirationMinutes: 60
+    refreshTokenExpirationDays: 7
+  ai:
+    defaultProvider: ollama
+    maxTokens: 4096
+    temperature: 0.3
+
+# Secrets (override in production via external secret manager)
+secrets:
+  jwtSecretKey: ""  # required — min 32 chars
+  create: true
+
+# Ingress with TLS
+ingress:
+  enabled: true
+  className: nginx
+  annotations:
+    cert-manager.io/cluster-issuer: letsencrypt-prod
+    nginx.ingress.kubernetes.io/ssl-redirect: "true"
+    nginx.ingress.kubernetes.io/proxy-body-size: "50m"
+  hosts:
+    - host: sentinel.example.com
+      paths:
+        - path: /api
+          pathType: Prefix
+          service: api
+        - path: /hubs
+          pathType: Prefix
+          service: api
+        - path: /
+          pathType: Prefix
+          service: web
+  tls:
+    - secretName: sentinel-tls
+      hosts:
+        - sentinel.example.com
+
+# Network policies
+networkPolicy:
+  enabled: true
+  allowIngressFromNamespaces: []
+  allowEgressToNamespaces: []
+
+# Service account
+serviceAccount:
+  create: true
+  name: sentinel
+  annotations: {}
+
+# Pod security
+podSecurityContext:
+  runAsNonRoot: true
+  runAsUser: 1001
+  runAsGroup: 1001
+  fsGroup: 1001
+
+securityContext:
+  allowPrivilegeEscalation: false
+  readOnlyRootFilesystem: false
+  capabilities:
+    drop:
+      - ALL
+
+# Node placement
+nodeSelector: {}
+tolerations: []
+affinity: {}

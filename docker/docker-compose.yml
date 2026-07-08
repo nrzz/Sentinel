@@ -1,0 +1,163 @@
+services:
+  postgres:
+    image: postgres:17-alpine
+    container_name: sentinel-postgres
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-sentinel}
+      POSTGRES_USER: ${POSTGRES_USER:-sentinel}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-sentinel_dev_password}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    ports:
+      - "${POSTGRES_PORT:-5432}:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-sentinel} -d ${POSTGRES_DB:-sentinel}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+    networks:
+      - sentinel
+
+  clickhouse:
+    image: clickhouse/clickhouse-server:24.12-alpine
+    container_name: sentinel-clickhouse
+    environment:
+      CLICKHOUSE_DB: ${CLICKHOUSE_DB:-sentinel}
+      CLICKHOUSE_USER: ${CLICKHOUSE_USER:-default}
+      CLICKHOUSE_PASSWORD: ${CLICKHOUSE_PASSWORD:-}
+    volumes:
+      - clickhouse_data:/var/lib/clickhouse
+    ports:
+      - "${CLICKHOUSE_HTTP_PORT:-8123}:8123"
+      - "${CLICKHOUSE_NATIVE_PORT:-9000}:9000"
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://localhost:8123/ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 15s
+    networks:
+      - sentinel
+
+  redis:
+    image: redis:7-alpine
+    container_name: sentinel-redis
+    command: redis-server --appendonly yes
+    volumes:
+      - redis_data:/data
+    ports:
+      - "${REDIS_PORT:-6379}:6379"
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - sentinel
+
+  rabbitmq:
+    image: rabbitmq:4-management-alpine
+    container_name: sentinel-rabbitmq
+    environment:
+      RABBITMQ_DEFAULT_USER: ${RABBITMQ_USER:-sentinel}
+      RABBITMQ_DEFAULT_PASS: ${RABBITMQ_PASSWORD:-sentinel_dev_password}
+    volumes:
+      - rabbitmq_data:/var/lib/rabbitmq
+    ports:
+      - "${RABBITMQ_PORT:-5672}:5672"
+      - "${RABBITMQ_MGMT_PORT:-15672}:15672"
+    healthcheck:
+      test: ["CMD", "rabbitmq-diagnostics", "-q", "ping"]
+      interval: 15s
+      timeout: 10s
+      retries: 5
+      start_period: 30s
+    networks:
+      - sentinel
+
+  sentinel-api:
+    build:
+      context: ..
+      dockerfile: docker/Dockerfile.api
+    container_name: sentinel-api
+    environment:
+      ASPNETCORE_ENVIRONMENT: ${ASPNETCORE_ENVIRONMENT:-Development}
+      PostgreSQL__ConnectionString: "Host=postgres;Port=5432;Database=${POSTGRES_DB:-sentinel};Username=${POSTGRES_USER:-sentinel};Password=${POSTGRES_PASSWORD:-sentinel_dev_password}"
+      ClickHouse__ConnectionString: "Host=clickhouse;Port=8123;Database=${CLICKHOUSE_DB:-sentinel};Username=${CLICKHOUSE_USER:-default};Password=${CLICKHOUSE_PASSWORD:-}"
+      Redis__ConnectionString: "redis:6379"
+      RabbitMQ__ConnectionString: "amqp://${RABBITMQ_USER:-sentinel}:${RABBITMQ_PASSWORD:-sentinel_dev_password}@rabbitmq:5672"
+      Jwt__SecretKey: ${JWT_SECRET_KEY:-sentinel-dev-secret-key-change-in-production-min-32-chars}
+    ports:
+      - "${API_PORT:-5018}:8080"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      clickhouse:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/health"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 40s
+    networks:
+      - sentinel
+
+  sentinel-worker:
+    build:
+      context: ..
+      dockerfile: docker/Dockerfile.worker
+    container_name: sentinel-worker
+    environment:
+      DOTNET_ENVIRONMENT: ${ASPNETCORE_ENVIRONMENT:-Development}
+      PostgreSQL__ConnectionString: "Host=postgres;Port=5432;Database=${POSTGRES_DB:-sentinel};Username=${POSTGRES_USER:-sentinel};Password=${POSTGRES_PASSWORD:-sentinel_dev_password}"
+      ClickHouse__ConnectionString: "Host=clickhouse;Port=8123;Database=${CLICKHOUSE_DB:-sentinel};Username=${CLICKHOUSE_USER:-default};Password=${CLICKHOUSE_PASSWORD:-}"
+      Redis__ConnectionString: "redis:6379"
+      RabbitMQ__ConnectionString: "amqp://${RABBITMQ_USER:-sentinel}:${RABBITMQ_PASSWORD:-sentinel_dev_password}@rabbitmq:5672"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      clickhouse:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+      sentinel-api:
+        condition: service_healthy
+    networks:
+      - sentinel
+
+  sentinel-web:
+    build:
+      context: ..
+      dockerfile: docker/Dockerfile.web
+    container_name: sentinel-web
+    ports:
+      - "${WEB_PORT:-3000}:8080"
+    depends_on:
+      sentinel-api:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://localhost:8080/health"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 10s
+    networks:
+      - sentinel
+
+volumes:
+  postgres_data:
+  clickhouse_data:
+  redis_data:
+  rabbitmq_data:
+
+networks:
+  sentinel:
+    driver: bridge

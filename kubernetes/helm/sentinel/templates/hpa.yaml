@@ -1,0 +1,82 @@
+{{- if and .Values.api.enabled .Values.api.autoscaling.enabled }}
+apiVersion: autoscaling/v2
+kind: HorizontalPodAutoscaler
+metadata:
+  name: {{ include "sentinel.fullname" . }}-api
+  namespace: {{ .Values.namespaces.platform }}
+  labels:
+    {{- include "sentinel.labels" . | nindent 4 }}
+    app.kubernetes.io/component: api
+spec:
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: {{ include "sentinel.fullname" . }}-api
+  minReplicas: {{ .Values.api.autoscaling.minReplicas }}
+  maxReplicas: {{ .Values.api.autoscaling.maxReplicas }}
+  metrics:
+    - type: Resource
+      resource:
+        name: cpu
+        target:
+          type: Utilization
+          averageUtilization: {{ .Values.api.autoscaling.targetCPUUtilizationPercentage }}
+    {{- if .Values.api.autoscaling.targetMemoryUtilizationPercentage }}
+    - type: Resource
+      resource:
+        name: memory
+        target:
+          type: Utilization
+          averageUtilization: {{ .Values.api.autoscaling.targetMemoryUtilizationPercentage }}
+    {{- end }}
+{{- end }}
+---
+{{- if and .Values.worker.enabled .Values.worker.autoscaling.enabled }}
+apiVersion: autoscaling/v2
+kind: HorizontalPodAutoscaler
+metadata:
+  name: {{ include "sentinel.fullname" . }}-worker
+  namespace: {{ .Values.namespaces.platform }}
+  labels:
+    {{- include "sentinel.labels" . | nindent 4 }}
+    app.kubernetes.io/component: worker
+spec:
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: {{ include "sentinel.fullname" . }}-worker
+  minReplicas: {{ .Values.worker.autoscaling.minReplicas }}
+  maxReplicas: {{ .Values.worker.autoscaling.maxReplicas }}
+  metrics:
+    - type: Resource
+      resource:
+        name: cpu
+        target:
+          type: Utilization
+          averageUtilization: {{ .Values.worker.autoscaling.targetCPUUtilizationPercentage }}
+{{- end }}
+---
+{{- if and .Values.web.enabled .Values.web.autoscaling.enabled }}
+apiVersion: autoscaling/v2
+kind: HorizontalPodAutoscaler
+metadata:
+  name: {{ include "sentinel.fullname" . }}-web
+  namespace: {{ .Values.namespaces.platform }}
+  labels:
+    {{- include "sentinel.labels" . | nindent 4 }}
+    app.kubernetes.io/component: web
+spec:
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: {{ include "sentinel.fullname" . }}-web
+  minReplicas: {{ .Values.web.autoscaling.minReplicas }}
+  maxReplicas: {{ .Values.web.autoscaling.maxReplicas }}
+  metrics:
+    - type: Resource
+      resource:
+        name: cpu
+        target:
+          type: Utilization
+          averageUtilization: {{ .Values.web.autoscaling.targetCPUUtilizationPercentage }}
+{{- end }}

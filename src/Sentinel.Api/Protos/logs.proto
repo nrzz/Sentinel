@@ -1,0 +1,23 @@
+syntax = "proto3";
+
+import "Protos/common.proto";
+
+option csharp_namespace = "Sentinel.Api.Grpc";
+
+package sentinel;
+
+service LogIngestion {
+  rpc StreamLogs (stream LogEntryMessage) returns (IngestResponse);
+}
+
+message LogEntryMessage {
+  string service = 1;
+  string environment = 2;
+  string level = 3;
+  string message = 4;
+  map<string, string> attributes = 5;
+  string trace_id = 6;
+  string span_id = 7;
+  string correlation_id = 8;
+  int64 timestamp_unix_ms = 9;
+}

@@ -1,0 +1,51 @@
+## .NET
+bin/
+obj/
+*.user
+*.suo
+.vs/
+TestResults/
+*.DotSettings.user
+*.slnx.user
+
+## Node
+node_modules/
+dist/
+*.local
+npm-debug.log*
+*.tsbuildinfo
+
+## Python
+__pycache__/
+*.py[cod]
+*.pyo
+.pytest_cache/
+*.egg-info/
+.venv/
+
+## Environment
+.env
+.env.*
+!.env.example
+
+## IDE
+.idea/
+*.swp
+.DS_Store
+
+## Docker
+docker/data/
+
+## Secrets
+**/appsettings.*.local.json
+secrets/
+
+## Test / coverage
+coverage/
+*.trx
+playwright-report/
+test-results/
+BenchmarkDotNet.Artifacts/
+
+## OS
+Thumbs.db

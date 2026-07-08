@@ -1,0 +1,32 @@
+# Build stage
+FROM mcr.microsoft.com/dotnet/sdk:10.0-preview AS build
+WORKDIR /src
+
+COPY Directory.Build.props ./
+COPY Sentinel.sln ./
+COPY src/Sentinel.Domain/Sentinel.Domain.csproj src/Sentinel.Domain/
+COPY src/Sentinel.Infrastructure/Sentinel.Infrastructure.csproj src/Sentinel.Infrastructure/
+COPY src/Sentinel.Workers/Sentinel.Workers.csproj src/Sentinel.Workers/
+
+RUN dotnet restore src/Sentinel.Workers/Sentinel.Workers.csproj
+
+COPY src/ src/
+RUN dotnet publish src/Sentinel.Workers/Sentinel.Workers.csproj \
+    -c Release \
+    -o /app/publish \
+    --no-restore
+
+# Runtime stage
+FROM mcr.microsoft.com/dotnet/aspnet:10.0-preview AS runtime
+WORKDIR /app
+
+RUN groupadd --system --gid 1001 sentinel \
+    && useradd --system --uid 1001 --gid sentinel sentinel
+
+COPY --from=build /app/publish .
+
+USER sentinel
+
+ENV DOTNET_ENVIRONMENT=Production
+
+ENTRYPOINT ["dotnet", "Sentinel.Workers.dll"]

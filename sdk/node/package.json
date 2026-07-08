@@ -1,0 +1,33 @@
+{
+  "name": "@sentinel/sdk",
+  "version": "1.0.0",
+  "description": "Official TypeScript client SDK for the Sentinel observability platform.",
+  "type": "module",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "exports": {
+    ".": {
+      "import": "./dist/index.js",
+      "types": "./dist/index.d.ts"
+    }
+  },
+  "scripts": {
+    "build": "tsc",
+    "clean": "rimraf dist"
+  },
+  "files": [
+    "dist"
+  ],
+  "keywords": [
+    "sentinel",
+    "observability",
+    "logs",
+    "metrics",
+    "alerts"
+  ],
+  "license": "MIT",
+  "devDependencies": {
+    "typescript": "^5.8.3",
+    "rimraf": "^6.0.1"
+  }
+}

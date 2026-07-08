@@ -1,0 +1,97 @@
+{{- if and .Values.redis.enabled (not .Values.externalDatabase.redis.enabled) }}
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "sentinel.fullname" . }}-redis
+  namespace: {{ .Values.namespaces.system }}
+  labels:
+    {{- include "sentinel.labels" . | nindent 4 }}
+    app.kubernetes.io/component: redis
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      {{- include "sentinel.selectorLabels" . | nindent 6 }}
+      app.kubernetes.io/component: redis
+  template:
+    metadata:
+      labels:
+        {{- include "sentinel.selectorLabels" . | nindent 8 }}
+        app.kubernetes.io/component: redis
+    spec:
+      containers:
+        - name: redis
+          image: "{{ .Values.redis.image.repository }}:{{ .Values.redis.image.tag }}"
+          ports:
+            - containerPort: {{ .Values.redis.service.port }}
+              name: redis
+          {{- if .Values.redis.auth.enabled }}
+          command: ["redis-server", "--requirepass", "$(REDIS_PASSWORD)"]
+          env:
+            - name: REDIS_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: {{ include "sentinel.fullname" . }}-secrets
+                  key: redis-password
+          {{- end }}
+          volumeMounts:
+            - name: data
+              mountPath: /data
+          resources:
+            {{- toYaml .Values.redis.resources | nindent 12 }}
+          livenessProbe:
+            tcpSocket:
+              port: redis
+            initialDelaySeconds: 15
+            periodSeconds: 10
+          readinessProbe:
+            exec:
+              command: ["redis-cli", "ping"]
+            initialDelaySeconds: 5
+            periodSeconds: 5
+      volumes:
+        - name: data
+          {{- if .Values.redis.persistence.enabled }}
+          persistentVolumeClaim:
+            claimName: {{ include "sentinel.fullname" . }}-redis
+          {{- else }}
+          emptyDir: {}
+          {{- end }}
+---
+{{- if .Values.redis.persistence.enabled }}
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: {{ include "sentinel.fullname" . }}-redis
+  namespace: {{ .Values.namespaces.system }}
+  labels:
+    {{- include "sentinel.labels" . | nindent 4 }}
+    app.kubernetes.io/component: redis
+spec:
+  accessModes: ["ReadWriteOnce"]
+  {{- if .Values.global.storageClass }}
+  storageClassName: {{ .Values.global.storageClass }}
+  {{- end }}
+  resources:
+    requests:
+      storage: {{ .Values.redis.persistence.size }}
+{{- end }}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ include "sentinel.fullname" . }}-redis
+  namespace: {{ .Values.namespaces.system }}
+  labels:
+    {{- include "sentinel.labels" . | nindent 4 }}
+    app.kubernetes.io/component: redis
+spec:
+  type: ClusterIP
+  ports:
+    - port: {{ .Values.redis.service.port }}
+      targetPort: redis
+      name: redis
+  selector:
+    {{- include "sentinel.selectorLabels" . | nindent 4 }}
+    app.kubernetes.io/component: redis
+{{- end }}

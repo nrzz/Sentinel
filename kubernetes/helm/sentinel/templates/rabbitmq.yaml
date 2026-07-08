@@ -1,0 +1,93 @@
+{{- if and .Values.rabbitmq.enabled (not .Values.externalDatabase.rabbitmq.enabled) }}
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: {{ include "sentinel.fullname" . }}-rabbitmq
+  namespace: {{ .Values.namespaces.system }}
+  labels:
+    {{- include "sentinel.labels" . | nindent 4 }}
+    app.kubernetes.io/component: rabbitmq
+spec:
+  serviceName: {{ include "sentinel.fullname" . }}-rabbitmq
+  replicas: 1
+  selector:
+    matchLabels:
+      {{- include "sentinel.selectorLabels" . | nindent 6 }}
+      app.kubernetes.io/component: rabbitmq
+  template:
+    metadata:
+      labels:
+        {{- include "sentinel.selectorLabels" . | nindent 8 }}
+        app.kubernetes.io/component: rabbitmq
+    spec:
+      containers:
+        - name: rabbitmq
+          image: "{{ .Values.rabbitmq.image.repository }}:{{ .Values.rabbitmq.image.tag }}"
+          ports:
+            - containerPort: {{ .Values.rabbitmq.service.amqpPort }}
+              name: amqp
+            - containerPort: {{ .Values.rabbitmq.service.managementPort }}
+              name: management
+          env:
+            - name: RABBITMQ_DEFAULT_USER
+              value: {{ .Values.rabbitmq.auth.username | quote }}
+            - name: RABBITMQ_DEFAULT_PASS
+              valueFrom:
+                secretKeyRef:
+                  name: {{ include "sentinel.fullname" . }}-secrets
+                  key: rabbitmq-password
+            - name: RABBITMQ_ERLANG_COOKIE
+              valueFrom:
+                secretKeyRef:
+                  name: {{ include "sentinel.fullname" . }}-secrets
+                  key: rabbitmq-erlang-cookie
+          volumeMounts:
+            - name: data
+              mountPath: /var/lib/rabbitmq
+          resources:
+            {{- toYaml .Values.rabbitmq.resources | nindent 12 }}
+          livenessProbe:
+            exec:
+              command: ["rabbitmq-diagnostics", "ping"]
+            initialDelaySeconds: 60
+            periodSeconds: 30
+          readinessProbe:
+            exec:
+              command: ["rabbitmq-diagnostics", "check_running"]
+            initialDelaySeconds: 30
+            periodSeconds: 10
+  {{- if .Values.rabbitmq.persistence.enabled }}
+  volumeClaimTemplates:
+    - metadata:
+        name: data
+      spec:
+        accessModes: ["ReadWriteOnce"]
+        {{- if .Values.global.storageClass }}
+        storageClassName: {{ .Values.global.storageClass }}
+        {{- end }}
+        resources:
+          requests:
+            storage: {{ .Values.rabbitmq.persistence.size }}
+  {{- end }}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ include "sentinel.fullname" . }}-rabbitmq
+  namespace: {{ .Values.namespaces.system }}
+  labels:
+    {{- include "sentinel.labels" . | nindent 4 }}
+    app.kubernetes.io/component: rabbitmq
+spec:
+  type: ClusterIP
+  ports:
+    - port: {{ .Values.rabbitmq.service.amqpPort }}
+      targetPort: amqp
+      name: amqp
+    - port: {{ .Values.rabbitmq.service.managementPort }}
+      targetPort: management
+      name: management
+  selector:
+    {{- include "sentinel.selectorLabels" . | nindent 4 }}
+    app.kubernetes.io/component: rabbitmq
+{{- end }}

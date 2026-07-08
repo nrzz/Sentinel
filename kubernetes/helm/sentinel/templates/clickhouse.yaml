@@ -1,0 +1,80 @@
+{{- if and .Values.clickhouse.enabled (not .Values.externalDatabase.clickhouse.enabled) }}
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: {{ include "sentinel.fullname" . }}-clickhouse
+  namespace: {{ .Values.namespaces.system }}
+  labels:
+    {{- include "sentinel.labels" . | nindent 4 }}
+    app.kubernetes.io/component: clickhouse
+spec:
+  serviceName: {{ include "sentinel.fullname" . }}-clickhouse
+  replicas: 1
+  selector:
+    matchLabels:
+      {{- include "sentinel.selectorLabels" . | nindent 6 }}
+      app.kubernetes.io/component: clickhouse
+  template:
+    metadata:
+      labels:
+        {{- include "sentinel.selectorLabels" . | nindent 8 }}
+        app.kubernetes.io/component: clickhouse
+    spec:
+      containers:
+        - name: clickhouse
+          image: "{{ .Values.clickhouse.image.repository }}:{{ .Values.clickhouse.image.tag }}"
+          ports:
+            - containerPort: {{ .Values.clickhouse.service.httpPort }}
+              name: http
+            - containerPort: {{ .Values.clickhouse.service.nativePort }}
+              name: native
+          env:
+            - name: CLICKHOUSE_DB
+              value: {{ .Values.clickhouse.auth.database | quote }}
+            - name: CLICKHOUSE_USER
+              value: {{ .Values.clickhouse.auth.username | quote }}
+            - name: CLICKHOUSE_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: {{ include "sentinel.fullname" . }}-secrets
+                  key: clickhouse-password
+          volumeMounts:
+            - name: data
+              mountPath: /var/lib/clickhouse
+          resources:
+            {{- toYaml .Values.clickhouse.resources | nindent 12 }}
+  {{- if .Values.clickhouse.persistence.enabled }}
+  volumeClaimTemplates:
+    - metadata:
+        name: data
+      spec:
+        accessModes: ["ReadWriteOnce"]
+        {{- if .Values.global.storageClass }}
+        storageClassName: {{ .Values.global.storageClass }}
+        {{- end }}
+        resources:
+          requests:
+            storage: {{ .Values.clickhouse.persistence.size }}
+  {{- end }}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ include "sentinel.fullname" . }}-clickhouse
+  namespace: {{ .Values.namespaces.system }}
+  labels:
+    {{- include "sentinel.labels" . | nindent 4 }}
+    app.kubernetes.io/component: clickhouse
+spec:
+  type: ClusterIP
+  ports:
+    - port: {{ .Values.clickhouse.service.httpPort }}
+      targetPort: http
+      name: http
+    - port: {{ .Values.clickhouse.service.nativePort }}
+      targetPort: native
+      name: native
+  selector:
+    {{- include "sentinel.selectorLabels" . | nindent 4 }}
+    app.kubernetes.io/component: clickhouse
+{{- end }}

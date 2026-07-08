@@ -1,0 +1,67 @@
+{{- if .Values.worker.enabled }}
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "sentinel.fullname" . }}-worker
+  namespace: {{ .Values.namespaces.platform }}
+  labels:
+    {{- include "sentinel.labels" . | nindent 4 }}
+    app.kubernetes.io/component: worker
+spec:
+  {{- if not .Values.worker.autoscaling.enabled }}
+  replicas: {{ .Values.worker.replicaCount }}
+  {{- end }}
+  selector:
+    matchLabels:
+      {{- include "sentinel.selectorLabels" . | nindent 6 }}
+      app.kubernetes.io/component: worker
+  template:
+    metadata:
+      labels:
+        {{- include "sentinel.selectorLabels" . | nindent 8 }}
+        app.kubernetes.io/component: worker
+    spec:
+      serviceAccountName: {{ include "sentinel.serviceAccountName" . }}
+      securityContext:
+        {{- toYaml .Values.podSecurityContext | nindent 8 }}
+      containers:
+        - name: worker
+          image: {{ include "sentinel.image" (dict "repository" .Values.worker.image.repository "tag" .Values.image.tag "Values" .Values "Chart" .Chart) }}
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          securityContext:
+            {{- toYaml .Values.securityContext | nindent 12 }}
+          envFrom:
+            - configMapRef:
+                name: {{ include "sentinel.fullname" . }}-config
+          env:
+            - name: DOTNET_ENVIRONMENT
+              value: {{ .Values.config.sentinel.environment | quote }}
+            - name: PostgreSQL__ConnectionString
+              value: {{ include "sentinel.postgresql.connectionString" . | quote }}
+            - name: ClickHouse__ConnectionString
+              value: {{ include "sentinel.clickhouse.connectionString" . | quote }}
+            - name: Redis__ConnectionString
+              value: {{ include "sentinel.redis.connectionString" . | quote }}
+            - name: RabbitMQ__ConnectionString
+              value: {{ include "sentinel.rabbitmq.connectionString" . | quote }}
+            - name: POSTGRES_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: {{ include "sentinel.fullname" . }}-secrets
+                  key: postgres-password
+            - name: CLICKHOUSE_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: {{ include "sentinel.fullname" . }}-secrets
+                  key: clickhouse-password
+            - name: RABBITMQ_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: {{ include "sentinel.fullname" . }}-secrets
+                  key: rabbitmq-password
+            {{- with .Values.worker.extraEnv }}
+            {{- toYaml . | nindent 12 }}
+            {{- end }}
+          resources:
+            {{- toYaml .Values.worker.resources | nindent 12 }}
+{{- end }}

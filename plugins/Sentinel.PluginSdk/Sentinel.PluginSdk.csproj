@@ -1,0 +1,13 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <RootNamespace>Sentinel.PluginSdk</RootNamespace>
+    <AssemblyName>Sentinel.PluginSdk</AssemblyName>
+    <Description>Sentinel plugin SDK for collectors, alert channels, AI providers, storage, and authentication extensions.</Description>
+    <Version>1.0.0</Version>
+    <Authors>Sentinel</Authors>
+    <PackageId>Sentinel.PluginSdk</PackageId>
+  </PropertyGroup>
+
+</Project>

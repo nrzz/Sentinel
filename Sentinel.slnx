@@ -1,0 +1,32 @@
+<Solution>
+  <Folder Name="/cli/">
+    <Project Path="cli/Sentinel.CLI/Sentinel.CLI.csproj" />
+  </Folder>
+  <Folder Name="/examples/">
+    <Project Path="examples/dotnet-log-shipper/dotnet-log-shipper.csproj" />
+  </Folder>
+  <Folder Name="/plugins/">
+    <Project Path="plugins/Sentinel.PluginSdk/Sentinel.PluginSdk.csproj" />
+  </Folder>
+  <Folder Name="/plugins/samples/">
+    <Project Path="plugins/samples/Sentinel.Plugins.FileCollector/Sentinel.Plugins.FileCollector.csproj" />
+    <Project Path="plugins/samples/Sentinel.Plugins.OllamaAi/Sentinel.Plugins.OllamaAi.csproj" />
+    <Project Path="plugins/samples/Sentinel.Plugins.SlackAlert/Sentinel.Plugins.SlackAlert.csproj" />
+  </Folder>
+  <Folder Name="/sdk/" />
+  <Folder Name="/sdk/dotnet/">
+    <Project Path="sdk/dotnet/Sentinel.Sdk/Sentinel.Sdk.csproj" />
+  </Folder>
+  <Folder Name="/src/">
+    <Project Path="src/Sentinel.Api/Sentinel.Api.csproj" />
+    <Project Path="src/Sentinel.Domain/Sentinel.Domain.csproj" />
+    <Project Path="src/Sentinel.Infrastructure/Sentinel.Infrastructure.csproj" />
+    <Project Path="src/Sentinel.Workers/Sentinel.Workers.csproj" />
+  </Folder>
+  <Folder Name="/tests/">
+    <Project Path="tests/Sentinel.Benchmarks/Sentinel.Benchmarks.csproj" />
+    <Project Path="tests/Sentinel.E2E/Sentinel.E2E.csproj" />
+    <Project Path="tests/Sentinel.IntegrationTests/Sentinel.IntegrationTests.csproj" />
+    <Project Path="tests/Sentinel.UnitTests/Sentinel.UnitTests.csproj" />
+  </Folder>
+</Solution>

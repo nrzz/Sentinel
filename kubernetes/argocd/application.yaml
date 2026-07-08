@@ -1,0 +1,47 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: sentinel
+  namespace: argocd
+  labels:
+    app.kubernetes.io/name: sentinel
+    app.kubernetes.io/part-of: sentinel-platform
+  finalizers:
+    - resources-finalizer.argocd.argoproj.io
+spec:
+  project: default
+  source:
+    repoURL: https://github.com/your-org/sentinel.git
+    targetRevision: main
+    path: kubernetes/helm/sentinel
+    helm:
+      releaseName: sentinel
+      valueFiles:
+        - values.yaml
+      parameters:
+        - name: image.tag
+          value: $ARGOCD_APP_REVISION
+        - name: secrets.jwtSecretKey
+          value: ""  # inject via Argo CD vault plugin or external secrets
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: sentinel-platform
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+      allowEmpty: false
+    syncOptions:
+      - CreateNamespace=true
+      - ServerSideApply=true
+    retry:
+      limit: 5
+      backoff:
+        duration: 5s
+        factor: 2
+        maxDuration: 3m
+  ignoreDifferences:
+    - group: apps
+      kind: Deployment
+      jsonPointers:
+        - /spec/replicas

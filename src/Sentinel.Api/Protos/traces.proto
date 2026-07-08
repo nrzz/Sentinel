@@ -1,0 +1,33 @@
+syntax = "proto3";
+
+import "Protos/common.proto";
+
+option csharp_namespace = "Sentinel.Api.Grpc";
+
+package sentinel;
+
+service TraceIngestion {
+  rpc StreamTraces (stream TraceMessage) returns (IngestResponse);
+}
+
+message TraceMessage {
+  string trace_id = 1;
+  string service = 2;
+  string name = 3;
+  double duration_ms = 4;
+  string status = 5;
+  map<string, string> attributes = 6;
+  repeated SpanMessage spans = 7;
+  int64 timestamp_unix_ms = 8;
+}
+
+message SpanMessage {
+  string span_id = 1;
+  string parent_span_id = 2;
+  string name = 3;
+  string service = 4;
+  double duration_ms = 5;
+  string status = 6;
+  map<string, string> attributes = 7;
+  int64 timestamp_unix_ms = 8;
+}

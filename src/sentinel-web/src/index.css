@@ -1,0 +1,20 @@
+@import "tailwindcss";
+
+@theme {
+  --color-sentinel-50: #f0fdf9;
+  --color-sentinel-100: #ccfbef;
+  --color-sentinel-200: #99f6e0;
+  --color-sentinel-300: #5eead4;
+  --color-sentinel-400: #2dd4bf;
+  --color-sentinel-500: #14b8a6;
+  --color-sentinel-600: #0d9488;
+  --color-sentinel-700: #0f766e;
+  --color-sentinel-800: #115e59;
+  --color-sentinel-900: #134e4a;
+}
+
+html,
+body,
+#root {
+  height: 100%;
+}

@@ -1,0 +1,15 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <RootNamespace>Sentinel.Plugins.FileCollector</RootNamespace>
+    <AssemblyName>Sentinel.Plugins.FileCollector</AssemblyName>
+    <Description>File-based log collector plugin for Sentinel.</Description>
+    <Version>1.0.0</Version>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\Sentinel.PluginSdk\Sentinel.PluginSdk.csproj" />
+  </ItemGroup>
+
+</Project>

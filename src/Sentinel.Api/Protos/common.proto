@@ -1,0 +1,10 @@
+syntax = "proto3";
+
+option csharp_namespace = "Sentinel.Api.Grpc";
+
+package sentinel;
+
+message IngestResponse {
+  int32 accepted_count = 1;
+  string status = 2;
+}

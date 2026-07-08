@@ -1,0 +1,16 @@
+apiVersion: v2
+name: sentinel
+description: Production Helm chart for the Sentinel observability platform
+type: application
+version: 0.7.0
+appVersion: "0.7.0"
+keywords:
+  - sentinel
+  - observability
+  - logging
+  - metrics
+  - tracing
+maintainers:
+  - name: Sentinel Team
+    email: ops@sentinel.local
+dependencies: []

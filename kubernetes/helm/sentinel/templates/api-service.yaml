@@ -1,0 +1,24 @@
+{{- if .Values.api.enabled }}
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ include "sentinel.fullname" . }}-api
+  namespace: {{ .Values.namespaces.platform }}
+  labels:
+    {{- include "sentinel.labels" . | nindent 4 }}
+    app.kubernetes.io/component: api
+spec:
+  type: {{ .Values.api.service.type }}
+  ports:
+    - port: {{ .Values.api.service.port }}
+      targetPort: http
+      protocol: TCP
+      name: http
+    - port: {{ .Values.api.service.grpcPort }}
+      targetPort: grpc
+      protocol: TCP
+      name: grpc
+  selector:
+    {{- include "sentinel.selectorLabels" . | nindent 4 }}
+    app.kubernetes.io/component: api
+{{- end }}

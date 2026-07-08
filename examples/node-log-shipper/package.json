@@ -1,0 +1,13 @@
+{
+  "name": "node-log-shipper",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Sample Node.js log shipper using @sentinel/sdk.",
+  "scripts": {
+    "start": "node index.js"
+  },
+  "dependencies": {
+    "@sentinel/sdk": "file:../../sdk/node"
+  }
+}

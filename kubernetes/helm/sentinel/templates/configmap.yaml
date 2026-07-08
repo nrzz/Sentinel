@@ -1,0 +1,22 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ include "sentinel.fullname" . }}-config
+  namespace: {{ .Values.namespaces.platform }}
+  labels:
+    {{- include "sentinel.labels" . | nindent 4 }}
+data:
+  ASPNETCORE_ENVIRONMENT: {{ .Values.config.sentinel.environment | quote }}
+  Sentinel__ServiceName: {{ .Values.config.sentinel.serviceName | quote }}
+  Sentinel__Environment: {{ .Values.config.sentinel.environment | quote }}
+  Jwt__Issuer: {{ .Values.config.jwt.issuer | quote }}
+  Jwt__Audience: {{ .Values.config.jwt.audience | quote }}
+  Jwt__AccessTokenExpirationMinutes: {{ .Values.config.jwt.accessTokenExpirationMinutes | quote }}
+  Jwt__RefreshTokenExpirationDays: {{ .Values.config.jwt.refreshTokenExpirationDays | quote }}
+  AI__DefaultProvider: {{ .Values.config.ai.defaultProvider | quote }}
+  AI__MaxTokens: {{ .Values.config.ai.maxTokens | quote }}
+  AI__Temperature: {{ .Values.config.ai.temperature | quote }}
+  PostgreSQL__Host: {{ include "sentinel.postgresql.host" . | quote }}
+  ClickHouse__Host: {{ include "sentinel.clickhouse.host" . | quote }}
+  Redis__Host: {{ include "sentinel.redis.host" . | quote }}
+  RabbitMQ__Host: {{ include "sentinel.rabbitmq.host" . | quote }}

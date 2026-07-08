@@ -1,0 +1,21 @@
+syntax = "proto3";
+
+import "Protos/common.proto";
+
+option csharp_namespace = "Sentinel.Api.Grpc";
+
+package sentinel;
+
+service MetricsIngestion {
+  rpc StreamMetrics (stream MetricMessage) returns (IngestResponse);
+}
+
+message MetricMessage {
+  string name = 1;
+  double value = 2;
+  string unit = 3;
+  map<string, string> tags = 4;
+  string service = 5;
+  string environment = 6;
+  int64 timestamp_unix_ms = 7;
+}

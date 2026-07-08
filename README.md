@@ -1,5 +1,9 @@
 # Sentinel
 
+[![CI](https://img.shields.io/github/actions/workflow/status/nrzz/Sentinel/ci.yml?branch=main&label=build)](https://github.com/nrzz/Sentinel/actions/workflows/ci.yml)
+[![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
+[![.NET](https://img.shields.io/badge/.NET-10.0-512BD4)](https://dotnet.microsoft.com/)
+
 Sentinel is an open-source observability platform for logs, metrics, traces, alerts, and incident management. It provides a unified view of your distributed systems with real-time ingestion, powerful querying, and an extensible plugin architecture.
 
 ## Features

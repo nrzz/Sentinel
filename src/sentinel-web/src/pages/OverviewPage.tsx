@@ -1,5 +1,5 @@
 import { useQuery } from '@tanstack/react-query';
-import { listAlerts } from '@/lib/api/alerts';
+import { listAlertExecutions } from '@/lib/api/alerts';
 import { listIncidents } from '@/lib/api/incidents';
 
 function StatCard({ label, value, subtext }: { label: string; value: string | number; subtext?: string }) {
@@ -13,11 +13,16 @@ function StatCard({ label, value, subtext }: { label: string; value: string | nu
 }
 
 export function OverviewPage() {
-  const { data: alerts = [] } = useQuery({ queryKey: ['alerts'], queryFn: listAlerts });
+  const { data: executions = [] } = useQuery({
+    queryKey: ['alert-executions'],
+    queryFn: () => listAlertExecutions(10),
+  });
   const { data: incidents = [] } = useQuery({ queryKey: ['incidents'], queryFn: listIncidents });
 
-  const firingAlerts = alerts.filter((a) => a.status === 'firing').length;
-  const openIncidents = incidents.filter((i) => i.status !== 'resolved').length;
+  const firingAlerts = executions.filter((e) => e.status === 'triggered').length;
+  const openIncidents = incidents.filter(
+    (i) => i.status !== 'resolved' && i.status !== 'closed',
+  ).length;
 
   return (
     <div className="space-y-6">
@@ -31,27 +36,27 @@ export function OverviewPage() {
         <StatCard label="Ingestion Rate" value="—" subtext="Logs / sec" />
       </div>
       <div className="rounded-lg border border-zinc-800 bg-zinc-900 p-6">
-        <h2 className="mb-4 text-sm font-medium text-zinc-300">Recent Alerts</h2>
-        {alerts.length === 0 ? (
-          <p className="text-sm text-zinc-500">No alerts yet. Configure alert rules to get started.</p>
+        <h2 className="mb-4 text-sm font-medium text-zinc-300">Recent Alert Executions</h2>
+        {executions.length === 0 ? (
+          <p className="text-sm text-zinc-500">No alert executions yet. Configure alert rules to get started.</p>
         ) : (
           <ul className="space-y-2">
-            {alerts.slice(0, 5).map((alert) => (
+            {executions.slice(0, 5).map((execution) => (
               <li
-                key={alert.id}
+                key={execution.id}
                 className="flex items-center justify-between rounded-md bg-zinc-950 px-3 py-2 text-sm"
               >
-                <span className="text-zinc-300">{alert.name}</span>
+                <span className="truncate text-zinc-300">{execution.message}</span>
                 <span
-                  className={`rounded px-2 py-0.5 text-xs ${
-                    alert.severity === 'critical'
+                  className={`ml-2 shrink-0 rounded px-2 py-0.5 text-xs ${
+                    execution.severity === 'critical'
                       ? 'bg-red-900/50 text-red-300'
-                      : alert.severity === 'warning'
+                      : execution.severity === 'warning'
                         ? 'bg-yellow-900/50 text-yellow-300'
                         : 'bg-blue-900/50 text-blue-300'
                   }`}
                 >
-                  {alert.status}
+                  {execution.status}
                 </span>
               </li>
             ))}

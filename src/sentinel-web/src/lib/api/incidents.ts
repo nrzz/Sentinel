@@ -1,14 +1,20 @@
 import { api } from './client';
 
+export type IncidentSeverity = 'low' | 'medium' | 'high' | 'critical';
+export type IncidentStatus = 'open' | 'investigating' | 'mitigated' | 'resolved' | 'closed';
+
 export interface Incident {
   id: string;
   title: string;
-  status: 'open' | 'investigating' | 'mitigated' | 'resolved';
-  severity: 'critical' | 'high' | 'medium' | 'low';
+  description: string;
+  severity: IncidentSeverity;
+  status: IncidentStatus;
+  assignedTo?: string;
+  sourceAlertExecutionId?: string;
+  createdBy?: string;
+  resolvedAt?: string;
   createdAt: string;
   updatedAt: string;
-  assignee?: string;
-  alertIds: string[];
 }
 
 const BASE = '/api/v1/incidents';

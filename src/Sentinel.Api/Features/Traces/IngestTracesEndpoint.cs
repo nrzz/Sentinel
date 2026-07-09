@@ -2,6 +2,7 @@ using System.Text.Json;
 using FluentValidation;
 using Microsoft.AspNetCore.Mvc;
 using Sentinel.Api.Common;
+using Sentinel.Api.Features.Ingestion;
 using Sentinel.Domain.Events;
 using Sentinel.Domain.Messaging;
 using Sentinel.Domain.Observability;
@@ -18,7 +19,8 @@ public static class IngestTracesEndpoint
             .WithName("IngestTraces")
             .WithTags("Traces")
             .Produces<IngestTracesResponse>(StatusCodes.Status202Accepted)
-            .AllowAnonymous();
+            .AllowAnonymous()
+            .WithIngestionAuth();
     }
 
     private static async Task<IResult> HandleAsync(

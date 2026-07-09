@@ -4,7 +4,8 @@
 
 | Version | Supported          |
 | ------- | ------------------ |
-| 0.1.x   | :white_check_mark: |
+| 0.7.x   | :white_check_mark: |
+| 0.1.x   | :x:                |
 
 ## Reporting a Vulnerability
 
@@ -32,7 +33,8 @@ You should receive a response within 48 hours. We will work with you to understa
 
 When deploying Sentinel:
 
-- **Change default credentials** — Update all passwords in `.env` before production use.
+- **Change default credentials** — The dev seeder creates `admin@sentinel.local` / `Admin123!` when `Security:SeedDefaultAdmin` is true. Set `Security:SeedDefaultAdmin` to `false` in production.
+- **Require API keys for ingestion** — Set `Ingestion:RequireApiKey` to `true` and `Ingestion:AllowHeaderOnlyTenant` to `false` in production.
 - **Rotate JWT secrets** — Use a strong, unique `JWT_SECRET_KEY` (minimum 32 characters).
 - **Enable TLS** — Terminate TLS at your reverse proxy or load balancer.
 - **Restrict network access** — Do not expose database ports publicly.

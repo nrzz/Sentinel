@@ -1,5 +1,6 @@
 using System.Collections.Concurrent;
 using System.Text.Json;
+using Sentinel.Api.Authorization;
 using Sentinel.Domain.Alerts;
 using Sentinel.Domain.Events;
 using Sentinel.Domain.Observability;
@@ -190,7 +191,7 @@ public sealed class TestAuthService : IAuthService
             "Admin User",
             tenantId ?? TestData.DefaultTenantId,
             ["admin"],
-            ["logs.read", "logs.write", "alerts.read", "alerts.write", "incidents.read", "incidents.write"]);
+            SentinelPermissions.All.ToList());
 
         return Task.FromResult<AuthResult?>(CreateResult(user));
     }
@@ -218,7 +219,7 @@ public sealed class TestAuthService : IAuthService
             "Admin User",
             TestData.DefaultTenantId,
             ["admin"],
-            ["logs.read", "logs.write", "alerts.read", "alerts.write", "incidents.read", "incidents.write"]);
+            SentinelPermissions.All.ToList());
 
         return Task.FromResult<AuthResult?>(CreateResult(user));
     }
@@ -294,6 +295,20 @@ public sealed class InMemoryAlertRepository : IAlertRepository
     {
         var executions = _executions.Values
             .Where(execution => execution.TenantId == tenantId && execution.AlertRuleId == alertRuleId)
+            .Take(limit)
+            .ToList();
+
+        return Task.FromResult<IReadOnlyList<AlertExecution>>(executions);
+    }
+
+    public Task<IReadOnlyList<AlertExecution>> ListRecentExecutionsAsync(
+        Guid tenantId,
+        int limit = 100,
+        CancellationToken cancellationToken = default)
+    {
+        var executions = _executions.Values
+            .Where(execution => execution.TenantId == tenantId)
+            .OrderByDescending(execution => execution.TriggeredAt)
             .Take(limit)
             .ToList();
 

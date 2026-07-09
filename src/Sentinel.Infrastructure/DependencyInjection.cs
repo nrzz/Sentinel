@@ -26,6 +26,8 @@ public static class DependencyInjection
         services.Configure<RabbitMqOptions>(configuration.GetSection(RabbitMqOptions.SectionName));
         services.Configure<JwtOptions>(configuration.GetSection(JwtOptions.SectionName));
         services.Configure<AiOptions>(configuration.GetSection(AiOptions.SectionName));
+        services.Configure<SecurityOptions>(configuration.GetSection(SecurityOptions.SectionName));
+        services.Configure<IngestionOptions>(configuration.GetSection(IngestionOptions.SectionName));
 
         services.AddSingleton<IPostgreSqlConnectionFactory, PostgreSqlConnectionFactory>();
         services.AddSingleton<IClickHouseConnectionFactory, ClickHouseConnectionFactory>();
@@ -41,6 +43,7 @@ public static class DependencyInjection
         services.ConfigureOptions<ConfigureJwtBearerOptions>();
         services.AddScoped<IAuthService, AuthService>();
         services.AddScoped<IRbacService, RbacService>();
+        services.AddScoped<IApiKeyRepository, ApiKeyRepository>();
         services.AddScoped<IAuditService, AuditService>();
         services.AddScoped<IUserService, UserService>();
         services.AddScoped<ITenantService, TenantService>();

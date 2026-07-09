@@ -47,7 +47,6 @@ jobs:
           PostgreSQL__ConnectionString: "Host=localhost;Port=5432;Database=sentinel_test;Username=sentinel;Password=sentinel_test_password"
           Redis__ConnectionString: "localhost:6379"
         run: dotnet test tests/Sentinel.IntegrationTests/Sentinel.IntegrationTests.csproj --configuration Release --no-build --verbosity normal
-        continue-on-error: true
 
     services:
       postgres:
@@ -67,6 +66,11 @@ jobs:
         image: redis:7-alpine
         ports:
           - 6379:6379
+        options: >-
+          --health-cmd "redis-cli ping"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
 
   publish-images:
     name: Publish Docker Images

@@ -1,4 +1,5 @@
 using Microsoft.AspNetCore.Mvc;
+using Sentinel.Api.Authorization;
 using Sentinel.Api.Common;
 using Sentinel.Infrastructure.Persistence.ClickHouse;
 
@@ -12,7 +13,7 @@ public static class SearchLogsEndpoint
             .WithName("SearchLogs")
             .WithTags("Search")
             .Produces<SearchLogsResponse>()
-            .RequireAuthorization();
+            .RequireAuthorization(SentinelPolicies.SearchRead);
     }
 
     private static async Task<IResult> HandleAsync(

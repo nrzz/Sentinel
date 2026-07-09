@@ -1,5 +1,6 @@
 using Microsoft.AspNetCore.Mvc;
 using Sentinel.Api;
+using Sentinel.Api.Authorization;
 using Sentinel.Domain.Alerts;
 using Sentinel.Infrastructure.Alerts;
 
@@ -19,12 +20,15 @@ public static class AlertExtensions
             .WithTags("Alerts")
             .RequireAuthorization();
 
-        group.MapGet("/", ListAlertRules);
-        group.MapGet("/{id:guid}", GetAlertRule);
-        group.MapPost("/", CreateAlertRule);
-        group.MapPut("/{id:guid}", UpdateAlertRule);
-        group.MapDelete("/{id:guid}", DeleteAlertRule);
-        group.MapGet("/{id:guid}/executions", ListAlertExecutions);
+        group.MapGet("/", ListAlertRules).RequireAuthorization(SentinelPolicies.AlertsRead);
+        group.MapGet("/executions", ListRecentExecutions).RequireAuthorization(SentinelPolicies.AlertsRead);
+        group.MapGet("/{id:guid}", GetAlertRule).RequireAuthorization(SentinelPolicies.AlertsRead);
+        group.MapPost("/", CreateAlertRule).RequireAuthorization(SentinelPolicies.AlertsWrite);
+        group.MapPut("/{id:guid}", UpdateAlertRule).RequireAuthorization(SentinelPolicies.AlertsWrite);
+        group.MapDelete("/{id:guid}", DeleteAlertRule).RequireAuthorization(SentinelPolicies.AlertsDelete);
+        group.MapGet("/{id:guid}/executions", ListAlertExecutions).RequireAuthorization(SentinelPolicies.AlertsRead);
+        group.MapPost("/executions/{executionId:guid}/silence", SilenceAlertExecution)
+            .RequireAuthorization(SentinelPolicies.AlertsWrite);
 
         return app;
     }
@@ -173,7 +177,60 @@ public static class AlertExtensions
 
         return Results.Ok(executions.Select(AlertExecutionResponse.FromEntity));
     }
+
+    private static async Task<IResult> ListRecentExecutions(
+        HttpContext context,
+        [FromServices] IAlertRepository repository,
+        [FromQuery] int limit,
+        CancellationToken cancellationToken)
+    {
+        var tenantId = context.GetTenantId();
+        if (tenantId == Guid.Empty)
+        {
+            return Results.BadRequest(new { error = "Tenant ID is required." });
+        }
+
+        var executions = await repository.ListRecentExecutionsAsync(
+            tenantId,
+            limit > 0 ? limit : 100,
+            cancellationToken);
+
+        return Results.Ok(executions.Select(AlertExecutionResponse.FromEntity));
+    }
+
+    private static async Task<IResult> SilenceAlertExecution(
+        Guid executionId,
+        SilenceAlertExecutionRequest request,
+        HttpContext context,
+        [FromServices] IAlertRepository repository,
+        CancellationToken cancellationToken)
+    {
+        var tenantId = context.GetTenantId();
+        if (tenantId == Guid.Empty)
+        {
+            return Results.BadRequest(new { error = "Tenant ID is required." });
+        }
+
+        var execution = await repository.GetExecutionByIdAsync(tenantId, executionId, cancellationToken);
+        if (execution is null)
+        {
+            return Results.NotFound();
+        }
+
+        if (execution.Status != AlertExecutionStatus.Triggered)
+        {
+            return Results.Conflict(new { error = "Only triggered executions can be silenced." });
+        }
+
+        var duration = request.DurationMinutes > 0 ? request.DurationMinutes : 60;
+        execution.Suppress($"silenced for {duration} minutes");
+        await repository.UpdateExecutionAsync(execution, cancellationToken);
+
+        return Results.Ok(AlertExecutionResponse.FromEntity(execution));
+    }
 }
+
+public sealed record SilenceAlertExecutionRequest(int DurationMinutes);
 
 public sealed record CreateAlertRuleRequest(
     string Name,

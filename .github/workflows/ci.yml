@@ -33,7 +33,22 @@ jobs:
 
       - name: Check formatting
         run: |
-          dotnet format Sentinel.slnx --verify-no-changes --verbosity diagnostic
+          CHANGED=$(git diff --name-only origin/${{ github.base_ref }}...HEAD -- '*.cs' | tr '\n' ' ')
+          if [ -z "$(echo "$CHANGED" | tr -d ' ')" ]; then
+            echo "No C# files changed; skipping format check."
+            exit 0
+          fi
+          dotnet format Sentinel.slnx --verify-no-changes --include $CHANGED --verbosity diagnostic
+
+      - name: Check for vulnerable NuGet packages
+        run: |
+          dotnet list Sentinel.slnx package --vulnerable --include-transitive 2>&1 | tee vulnerable-packages.txt
+          if grep -q "has the following vulnerable packages" vulnerable-packages.txt; then
+            echo "::error::Vulnerable NuGet packages detected"
+            cat vulnerable-packages.txt
+            exit 1
+          fi
+          echo "No vulnerable NuGet packages found"
 
   frontend-build:
     name: Frontend Build

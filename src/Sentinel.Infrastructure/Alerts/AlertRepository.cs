@@ -157,6 +157,35 @@ public sealed class AlertRepository : IAlertRepository
         return executions;
     }
 
+    public async Task<IReadOnlyList<AlertExecution>> ListRecentExecutionsAsync(
+        Guid tenantId,
+        int limit = 100,
+        CancellationToken cancellationToken = default)
+    {
+        await using var connection = await _connectionFactory.CreateConnectionAsync(cancellationToken);
+        await using var command = new NpgsqlCommand(
+            """
+            SELECT id, tenant_id, alert_rule_id, status, severity, message, matched_value,
+                   triggered_at, resolved_at, correlation_id, created_at, updated_at
+            FROM alert_executions
+            WHERE tenant_id = @tenant_id
+            ORDER BY triggered_at DESC
+            LIMIT @limit
+            """,
+            connection);
+        command.Parameters.AddWithValue("tenant_id", tenantId);
+        command.Parameters.AddWithValue("limit", limit);
+
+        var executions = new List<AlertExecution>();
+        await using var reader = await command.ExecuteReaderAsync(cancellationToken);
+        while (await reader.ReadAsync(cancellationToken))
+        {
+            executions.Add(MapExecution(reader));
+        }
+
+        return executions;
+    }
+
     public async Task CreateExecutionAsync(AlertExecution execution, CancellationToken cancellationToken = default)
     {
         await using var connection = await _connectionFactory.CreateConnectionAsync(cancellationToken);

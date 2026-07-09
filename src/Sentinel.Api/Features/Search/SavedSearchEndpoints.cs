@@ -1,5 +1,7 @@
 using FluentValidation;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Options;
+using Sentinel.Api.Authorization;
 using Sentinel.Api.Common;
 using Sentinel.Infrastructure.Persistence.Search;
 
@@ -11,11 +13,11 @@ public static class SavedSearchEndpoints
     {
         var group = app.MapGroup("/api/v1/search/saved").WithTags("Search").RequireAuthorization();
 
-        group.MapGet("/", ListAsync).WithName("ListSavedSearches");
-        group.MapGet("/{id:guid}", GetAsync).WithName("GetSavedSearch");
-        group.MapPost("/", CreateAsync).WithName("CreateSavedSearch");
-        group.MapPut("/{id:guid}", UpdateAsync).WithName("UpdateSavedSearch");
-        group.MapDelete("/{id:guid}", DeleteAsync).WithName("DeleteSavedSearch");
+        group.MapGet("/", ListAsync).WithName("ListSavedSearches").RequireAuthorization(SentinelPolicies.SearchRead);
+        group.MapGet("/{id:guid}", GetAsync).WithName("GetSavedSearch").RequireAuthorization(SentinelPolicies.SearchRead);
+        group.MapPost("/", CreateAsync).WithName("CreateSavedSearch").RequireAuthorization(SentinelPolicies.SearchWrite);
+        group.MapPut("/{id:guid}", UpdateAsync).WithName("UpdateSavedSearch").RequireAuthorization(SentinelPolicies.SearchWrite);
+        group.MapDelete("/{id:guid}", DeleteAsync).WithName("DeleteSavedSearch").RequireAuthorization(SentinelPolicies.SearchWrite);
     }
 
     private static async Task<IResult> ListAsync(

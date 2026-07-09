@@ -15,6 +15,11 @@ public interface IAlertRepository
         Guid alertRuleId,
         int limit = 100,
         CancellationToken cancellationToken = default);
+
+    Task<IReadOnlyList<AlertExecution>> ListRecentExecutionsAsync(
+        Guid tenantId,
+        int limit = 100,
+        CancellationToken cancellationToken = default);
     Task CreateExecutionAsync(AlertExecution execution, CancellationToken cancellationToken = default);
     Task UpdateExecutionAsync(AlertExecution execution, CancellationToken cancellationToken = default);
     Task CreateNotificationAsync(AlertNotification notification, CancellationToken cancellationToken = default);

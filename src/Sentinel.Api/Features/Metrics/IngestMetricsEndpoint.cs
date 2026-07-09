@@ -3,6 +3,7 @@ using System.Text;
 using System.Text.Json;
 using Microsoft.AspNetCore.Mvc;
 using Sentinel.Api.Common;
+using Sentinel.Api.Features.Ingestion;
 using Sentinel.Domain.Events;
 using Sentinel.Domain.Messaging;
 using Sentinel.Domain.Observability;
@@ -19,7 +20,8 @@ public static class IngestMetricsEndpoint
             .WithName("IngestMetrics")
             .WithTags("Metrics")
             .Produces<IngestMetricsResponse>(StatusCodes.Status202Accepted)
-            .AllowAnonymous();
+            .AllowAnonymous()
+            .WithIngestionAuth();
     }
 
     private static async Task<IResult> HandleAsync(

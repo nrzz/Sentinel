@@ -1,4 +1,5 @@
 using Microsoft.AspNetCore.Mvc;
+using Sentinel.Api.Authorization;
 using Sentinel.Api.Common;
 using Sentinel.Infrastructure.Persistence.ClickHouse;
 
@@ -12,13 +13,13 @@ public static class QueryTracesEndpoint
             .WithName("QueryTraces")
             .WithTags("Traces")
             .Produces<QueryTracesResponse>()
-            .RequireAuthorization();
+            .RequireAuthorization(SentinelPolicies.TracesRead);
 
         app.MapGet("/api/v1/traces/{traceId}", GetDetailAsync)
             .WithName("GetTraceDetail")
             .WithTags("Traces")
             .Produces<GetTraceDetailResponse>()
-            .RequireAuthorization();
+            .RequireAuthorization(SentinelPolicies.TracesRead);
     }
 
     private static async Task<IResult> ListAsync(

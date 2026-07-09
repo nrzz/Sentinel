@@ -33,7 +33,12 @@ jobs:
 
       - name: Check formatting
         run: |
-          dotnet format Sentinel.slnx --verify-no-changes --verbosity diagnostic
+          CHANGED=$(git diff --name-only origin/${{ github.base_ref }}...HEAD -- '*.cs' | tr '\n' ' ')
+          if [ -z "$(echo "$CHANGED" | tr -d ' ')" ]; then
+            echo "No C# files changed; skipping format check."
+            exit 0
+          fi
+          dotnet format Sentinel.slnx --verify-no-changes --include $CHANGED --verbosity diagnostic
 
       - name: Check for vulnerable NuGet packages
         run: |

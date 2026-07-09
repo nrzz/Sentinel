@@ -1,9 +1,14 @@
 using FluentValidation;
+using System.Text.Json.Serialization;
+using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using OpenTelemetry.Metrics;
 using OpenTelemetry.Resources;
 using OpenTelemetry.Trace;
 using Scalar.AspNetCore;
+using Sentinel.Api.Authentication;
+using Sentinel.Api.Authorization;
+using Sentinel.Api.Configuration;
 using Sentinel.Api.Features.AI;
 using Sentinel.Api.Features.Alerts;
 using Sentinel.Api.Features.Authentication;
@@ -45,12 +50,42 @@ builder.Services.AddAiFeatures(builder.Configuration);
 
 builder.Services.AddValidatorsFromAssemblyContaining<Program>();
 
-builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
-    .AddJwtBearer();
+builder.Services.ConfigureHttpJsonOptions(options =>
+{
+    options.SerializerOptions.Converters.Add(
+        new JsonStringEnumConverter(System.Text.Json.JsonNamingPolicy.CamelCase, allowIntegerValues: true));
+});
 
-builder.Services.AddAuthorization();
-builder.Services.AddSignalR();
-builder.Services.AddGrpc();
+builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
+    .AddJwtBearer()
+    .AddScheme<AuthenticationSchemeOptions, ApiKeyAuthenticationHandler>(
+        ApiKeyAuthenticationDefaults.AuthenticationScheme,
+        _ => { });
+
+builder.Services.AddSentinelAuthorization();
+
+var securityOptions = builder.Configuration.GetSection(SecurityOptions.SectionName).Get<SecurityOptions>() ?? new();
+builder.Services.AddCors(options =>
+{
+    options.AddDefaultPolicy(policy =>
+    {
+        if (securityOptions.AllowedCorsOrigins.Length > 0)
+        {
+            policy.WithOrigins(securityOptions.AllowedCorsOrigins)
+                .AllowAnyMethod()
+                .AllowAnyHeader()
+                .AllowCredentials();
+        }
+        else if (builder.Environment.IsDevelopment())
+        {
+            policy.AllowAnyOrigin().AllowAnyMethod().AllowAnyHeader();
+        }
+        else
+        {
+            policy.SetIsOriginAllowed(_ => false);
+        }
+    });
+});
 
 var sentinelOptions = builder.Configuration.GetSection(SentinelOptions.SectionName).Get<SentinelOptions>()!;
 builder.Services.AddOpenTelemetry()
@@ -65,6 +100,9 @@ builder.Services.AddOpenTelemetry()
         .AddRuntimeInstrumentation()
         .AddOtlpExporter());
 
+builder.Services.AddSignalR();
+builder.Services.AddGrpc();
+
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen(options =>
 {
@@ -78,11 +116,7 @@ builder.Services.AddSwaggerGen(options =>
     });
 });
 
-builder.Services.AddCors(options =>
-{
-    options.AddDefaultPolicy(policy =>
-        policy.AllowAnyOrigin().AllowAnyMethod().AllowAnyHeader());
-});
+ProductionConfigValidator.Validate(builder.Configuration, builder.Environment);
 
 var app = builder.Build();
 

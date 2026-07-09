@@ -50,4 +50,33 @@ public sealed class ApiKey : Entity
         IsActive = false;
         Touch();
     }
+
+    public static ApiKey FromPersistence(
+        Guid id,
+        Guid tenantId,
+        string name,
+        string keyHash,
+        string keyPrefix,
+        string[] scopes,
+        DateTimeOffset? expiresAt,
+        bool isActive,
+        Guid? createdByUserId,
+        DateTimeOffset? lastUsedAt,
+        DateTimeOffset createdAt,
+        DateTimeOffset updatedAt) =>
+        new()
+        {
+            Id = id,
+            TenantId = tenantId,
+            Name = name,
+            KeyHash = keyHash,
+            KeyPrefix = keyPrefix,
+            Scopes = scopes,
+            ExpiresAt = expiresAt,
+            IsActive = isActive,
+            CreatedByUserId = createdByUserId,
+            LastUsedAt = lastUsedAt,
+            CreatedAt = createdAt,
+            UpdatedAt = updatedAt,
+        };
 }

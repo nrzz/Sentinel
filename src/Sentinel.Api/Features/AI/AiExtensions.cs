@@ -2,6 +2,7 @@ using System.Text.Json;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Options;
 using Sentinel.Api;
+using Sentinel.Api.Authorization;
 using Sentinel.Domain.AI;
 using Sentinel.Domain.Configuration;
 using Sentinel.Infrastructure.AI;
@@ -55,9 +56,9 @@ public static class AiExtensions
             .WithTags("AI")
             .RequireAuthorization();
 
-        group.MapPost("/search", Search);
-        group.MapPost("/summarize", Summarize);
-        group.MapPost("/correlate", Correlate);
+        group.MapPost("/search", Search).RequireAuthorization(SentinelPolicies.SearchRead);
+        group.MapPost("/summarize", Summarize).RequireAuthorization(SentinelPolicies.SearchRead);
+        group.MapPost("/correlate", Correlate).RequireAuthorization(SentinelPolicies.SearchRead);
         group.MapPost("/feedback", SubmitFeedback);
 
         return app;

@@ -1,4 +1,5 @@
 using Microsoft.AspNetCore.Mvc;
+using Sentinel.Api.Authorization;
 using Sentinel.Api.Common;
 using Sentinel.Infrastructure.Persistence.ClickHouse;
 using System.Text.Json;
@@ -13,7 +14,7 @@ public static class QueryMetricsEndpoint
             .WithName("QueryMetrics")
             .WithTags("Metrics")
             .Produces<QueryMetricsResponse>()
-            .RequireAuthorization();
+            .RequireAuthorization(SentinelPolicies.MetricsRead);
     }
 
     private static async Task<IResult> HandleAsync(

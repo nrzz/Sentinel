@@ -57,6 +57,8 @@ docker compose up -d
 | API Docs      | http://localhost:5018/scalar |
 | RabbitMQ Mgmt | http://localhost:15672       |
 
+**Default dev credentials** (when `Security:SeedDefaultAdmin` is true): `admin@sentinel.local` / `Admin123!` — change before any non-local deployment.
+
 ### Local Development
 
 **Backend:**
@@ -98,6 +100,9 @@ Sentinel/
 ## Documentation
 
 - [Architecture](docs/architecture.md)
+- [Deployment](docs/deployment.md)
+- [Operations](docs/operations.md)
+- [Disaster Recovery](docs/disaster-recovery.md)
 - [Contributing](CONTRIBUTING.md)
 - [Roadmap](ROADMAP.md)
 - [Changelog](CHANGELOG.md)

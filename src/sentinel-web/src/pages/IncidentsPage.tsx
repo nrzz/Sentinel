@@ -54,7 +54,7 @@ export function IncidentsPage() {
                     </span>
                   </td>
                   <td className="px-4 py-3 text-zinc-400">{incident.severity}</td>
-                  <td className="px-4 py-3 text-zinc-400">{incident.assignee ?? '—'}</td>
+                  <td className="px-4 py-3 text-zinc-400">{incident.assignedTo ?? '—'}</td>
                   <td className="px-4 py-3 text-zinc-500">
                     {new Date(incident.createdAt).toLocaleString()}
                   </td>

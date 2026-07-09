@@ -1,5 +1,6 @@
 using Microsoft.AspNetCore.Mvc;
 using Sentinel.Api;
+using Sentinel.Api.Authorization;
 using Sentinel.Domain.Dashboards;
 using Sentinel.Infrastructure.Dashboards;
 
@@ -19,11 +20,11 @@ public static class DashboardExtensions
             .WithTags("Dashboards")
             .RequireAuthorization();
 
-        group.MapGet("/", ListDashboards);
-        group.MapGet("/{id:guid}", GetDashboard);
-        group.MapPost("/", CreateDashboard);
-        group.MapPut("/{id:guid}", UpdateDashboard);
-        group.MapDelete("/{id:guid}", DeleteDashboard);
+        group.MapGet("/", ListDashboards).RequireAuthorization(SentinelPolicies.DashboardsRead);
+        group.MapGet("/{id:guid}", GetDashboard).RequireAuthorization(SentinelPolicies.DashboardsRead);
+        group.MapPost("/", CreateDashboard).RequireAuthorization(SentinelPolicies.DashboardsWrite);
+        group.MapPut("/{id:guid}", UpdateDashboard).RequireAuthorization(SentinelPolicies.DashboardsWrite);
+        group.MapDelete("/{id:guid}", DeleteDashboard).RequireAuthorization(SentinelPolicies.DashboardsDelete);
 
         return app;
     }

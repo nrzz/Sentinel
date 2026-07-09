@@ -1,4 +1,6 @@
 using FluentValidation;
+using Microsoft.Extensions.Options;
+using Sentinel.Domain.Configuration;
 using Sentinel.Infrastructure.Identity;
 
 namespace Sentinel.Api.Features.Authentication;
@@ -9,8 +11,16 @@ internal static class RegisterEndpoint
         RegisterRequest request,
         IValidator<RegisterRequest> validator,
         IAuthService authService,
+        IOptions<SecurityOptions> securityOptions,
+        IHostEnvironment environment,
         CancellationToken cancellationToken)
     {
+        if (!securityOptions.Value.AllowOpenRegistration && !environment.IsDevelopment())
+        {
+            return Results.Problem(
+                "Open registration is disabled on this instance.",
+                statusCode: StatusCodes.Status403Forbidden);
+        }
         var validation = await validator.ValidateAsync(request, cancellationToken);
         if (!validation.IsValid)
         {

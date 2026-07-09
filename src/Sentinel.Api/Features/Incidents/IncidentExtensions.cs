@@ -1,5 +1,6 @@
 using Microsoft.AspNetCore.Mvc;
 using Sentinel.Api;
+using Sentinel.Api.Authorization;
 using Sentinel.Domain.Incidents;
 using Sentinel.Infrastructure.Incidents;
 
@@ -19,17 +20,18 @@ public static class IncidentExtensions
             .WithTags("Incidents")
             .RequireAuthorization();
 
-        group.MapGet("/", ListIncidents);
-        group.MapGet("/{id:guid}", GetIncident);
-        group.MapPost("/", CreateIncident);
-        group.MapPut("/{id:guid}", UpdateIncident);
-        group.MapDelete("/{id:guid}", DeleteIncident);
-        group.MapGet("/{id:guid}/timeline", ListTimeline);
-        group.MapPost("/{id:guid}/timeline", AddTimelineEntry);
-        group.MapGet("/{id:guid}/comments", ListComments);
-        group.MapPost("/{id:guid}/comments", AddComment);
-        group.MapPut("/{id:guid}/comments/{commentId:guid}", UpdateComment);
-        group.MapDelete("/{id:guid}/comments/{commentId:guid}", DeleteComment);
+        group.MapGet("/", ListIncidents).RequireAuthorization(SentinelPolicies.IncidentsRead);
+        group.MapGet("/{id:guid}", GetIncident).RequireAuthorization(SentinelPolicies.IncidentsRead);
+        group.MapPost("/", CreateIncident).RequireAuthorization(SentinelPolicies.IncidentsWrite);
+        group.MapPut("/{id:guid}", UpdateIncident).RequireAuthorization(SentinelPolicies.IncidentsWrite);
+        group.MapPatch("/{id:guid}", PatchIncident).RequireAuthorization(SentinelPolicies.IncidentsWrite);
+        group.MapDelete("/{id:guid}", DeleteIncident).RequireAuthorization(SentinelPolicies.IncidentsDelete);
+        group.MapGet("/{id:guid}/timeline", ListTimeline).RequireAuthorization(SentinelPolicies.IncidentsRead);
+        group.MapPost("/{id:guid}/timeline", AddTimelineEntry).RequireAuthorization(SentinelPolicies.IncidentsWrite);
+        group.MapGet("/{id:guid}/comments", ListComments).RequireAuthorization(SentinelPolicies.IncidentsRead);
+        group.MapPost("/{id:guid}/comments", AddComment).RequireAuthorization(SentinelPolicies.IncidentsWrite);
+        group.MapPut("/{id:guid}/comments/{commentId:guid}", UpdateComment).RequireAuthorization(SentinelPolicies.IncidentsWrite);
+        group.MapDelete("/{id:guid}/comments/{commentId:guid}", DeleteComment).RequireAuthorization(SentinelPolicies.IncidentsDelete);
 
         return app;
     }
@@ -129,6 +131,54 @@ public static class IncidentExtensions
         if (request.Status.HasValue)
         {
             incident.SetStatus(request.Status.Value);
+        }
+
+        await repository.UpdateAsync(incident, cancellationToken);
+
+        if (request.Status.HasValue && request.Status.Value != previousStatus)
+        {
+            var entry = IncidentTimelineEntry.Create(
+                tenantId,
+                incident.Id,
+                IncidentTimelineEntryType.StatusChanged,
+                $"Status changed from {previousStatus} to {request.Status.Value}",
+                context.GetUserId());
+
+            await repository.AddTimelineEntryAsync(entry, cancellationToken);
+        }
+
+        return Results.Ok(IncidentResponse.FromEntity(incident));
+    }
+
+    private static async Task<IResult> PatchIncident(
+        Guid id,
+        PatchIncidentRequest request,
+        HttpContext context,
+        [FromServices] IIncidentRepository repository,
+        CancellationToken cancellationToken)
+    {
+        var tenantId = context.GetTenantId();
+        if (tenantId == Guid.Empty)
+        {
+            return Results.BadRequest(new { error = "Tenant ID is required." });
+        }
+
+        var incident = await repository.GetByIdAsync(tenantId, id, cancellationToken);
+        if (incident is null)
+        {
+            return Results.NotFound();
+        }
+
+        var previousStatus = incident.Status;
+
+        if (request.Status.HasValue)
+        {
+            incident.SetStatus(request.Status.Value);
+        }
+
+        if (request.AssignedTo is not null)
+        {
+            incident.Assign(request.AssignedTo);
         }
 
         await repository.UpdateAsync(incident, cancellationToken);
@@ -328,6 +378,10 @@ public static class IncidentExtensions
         return Results.NoContent();
     }
 }
+
+public sealed record PatchIncidentRequest(
+    IncidentStatus? Status,
+    string? AssignedTo);
 
 public sealed record CreateIncidentRequest(
     string Title,

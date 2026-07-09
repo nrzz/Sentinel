@@ -2,6 +2,7 @@ using FluentValidation;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.SignalR;
 using Sentinel.Api.Common;
+using Sentinel.Api.Features.Ingestion;
 using Sentinel.Api.Hubs;
 using Sentinel.Domain.Events;
 using Sentinel.Domain.Messaging;
@@ -18,7 +19,8 @@ public static class IngestLogsEndpoint
             .WithTags("Logs")
             .Produces<IngestLogsResponse>(StatusCodes.Status202Accepted)
             .ProducesValidationProblem()
-            .AllowAnonymous();
+            .AllowAnonymous()
+            .WithIngestionAuth();
     }
 
     private static async Task<IResult> HandleAsync(

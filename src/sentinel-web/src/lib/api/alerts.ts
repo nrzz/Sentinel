@@ -1,22 +1,48 @@
 import { api } from './client';
 
-export interface Alert {
+export type AlertSeverity = 'info' | 'warning' | 'critical';
+export type AlertRuleStatus = 'active' | 'paused' | 'disabled';
+export type AlertExecutionStatus = 'triggered' | 'resolved' | 'suppressed' | 'failed';
+
+export interface AlertRule {
   id: string;
+  tenantId: string;
   name: string;
-  severity: 'critical' | 'warning' | 'info';
-  status: 'firing' | 'resolved' | 'silenced';
+  description: string;
+  query: string;
+  condition: string;
+  severity: AlertSeverity;
+  status: AlertRuleStatus;
+  evaluationIntervalSeconds: number;
+  notificationChannels: string[];
+  createdBy?: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface AlertExecution {
+  id: string;
+  alertRuleId: string;
+  status: AlertExecutionStatus;
+  severity: AlertSeverity;
   message: string;
-  firedAt: string;
+  matchedValue?: string;
+  triggeredAt: string;
   resolvedAt?: string;
-  labels?: Record<string, string>;
+  correlationId?: string;
+  createdAt: string;
 }
 
 const BASE = '/api/v1/alerts';
 
-export function listAlerts(): Promise<Alert[]> {
-  return api.get<Alert[]>(BASE);
+export function listAlertRules(): Promise<AlertRule[]> {
+  return api.get<AlertRule[]>(BASE);
 }
 
-export function silenceAlert(id: string, durationMinutes: number): Promise<void> {
-  return api.post<void>(`${BASE}/${id}/silence`, { durationMinutes });
+export function listAlertExecutions(limit = 50): Promise<AlertExecution[]> {
+  return api.get<AlertExecution[]>(`${BASE}/executions?limit=${limit}`);
+}
+
+export function silenceAlertExecution(id: string, durationMinutes: number): Promise<AlertExecution> {
+  return api.post<AlertExecution>(`${BASE}/executions/${id}/silence`, { durationMinutes });
 }

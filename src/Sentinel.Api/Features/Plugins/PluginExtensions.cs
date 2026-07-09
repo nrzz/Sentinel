@@ -1,5 +1,6 @@
 using Microsoft.AspNetCore.Mvc;
 using Sentinel.Api;
+using Sentinel.Api.Authorization;
 using Sentinel.Domain.Plugins;
 using Sentinel.Infrastructure.Plugins;
 
@@ -19,9 +20,10 @@ public static class PluginExtensions
             .WithTags("Plugins")
             .RequireAuthorization();
 
-        group.MapGet("/", ListPlugins);
-        group.MapPost("/install", InstallPlugin);
-        group.MapDelete("/{id:guid}", RemovePlugin);
+        group.MapGet("/", ListPlugins).RequireAuthorization(SentinelPolicies.PluginsRead);
+        group.MapPost("/install", InstallPlugin).RequireAuthorization(SentinelPolicies.PluginsWrite);
+        group.MapPatch("/{id:guid}", TogglePlugin).RequireAuthorization(SentinelPolicies.PluginsWrite);
+        group.MapDelete("/{id:guid}", RemovePlugin).RequireAuthorization(SentinelPolicies.PluginsDelete);
 
         return app;
     }
@@ -95,7 +97,41 @@ public static class PluginExtensions
         await repository.RemoveAsync(tenantId, id, cancellationToken);
         return Results.NoContent();
     }
+
+    private static async Task<IResult> TogglePlugin(
+        Guid id,
+        TogglePluginRequest request,
+        HttpContext context,
+        [FromServices] IPluginRepository repository,
+        CancellationToken cancellationToken)
+    {
+        var tenantId = context.GetTenantId();
+        if (tenantId == Guid.Empty)
+        {
+            return Results.BadRequest(new { error = "Tenant ID is required." });
+        }
+
+        var plugin = await repository.GetByIdAsync(tenantId, id, cancellationToken);
+        if (plugin is null)
+        {
+            return Results.NotFound();
+        }
+
+        if (request.Enabled)
+        {
+            plugin.Enable();
+        }
+        else
+        {
+            plugin.Disable();
+        }
+
+        await repository.UpdateAsync(plugin, cancellationToken);
+        return Results.Ok(PluginResponse.FromEntity(plugin));
+    }
 }
+
+public sealed record TogglePluginRequest(bool Enabled);
 
 public sealed record InstallPluginRequest(
     string Name,

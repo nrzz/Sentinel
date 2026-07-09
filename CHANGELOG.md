@@ -7,35 +7,37 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.7.0] — 2026-07-09
+
 ### Added
 
-- Initial project scaffolding with .NET 10 API, Workers, Domain, and Infrastructure layers
-- React 19 frontend with Vite, TypeScript, and Tailwind CSS
-- Dark mode UI with sidebar navigation and command palette (Ctrl+K)
-- Pages: Login, Overview, Logs, Metrics, Traces, Alerts, Incidents, Dashboards, Plugins, Settings
-- JWT authentication store with in-memory tokens and refresh flow
-- API client module for `/api/v1` endpoints
-- SignalR integration for live log streaming
-- Virtualized log table with `@tanstack/react-virtual`
-- Metrics charts with Recharts
-- Docker Compose stack: PostgreSQL, ClickHouse, Redis, RabbitMQ, API, Worker, Web
-- Multi-stage Dockerfiles with non-root users and health checks
-- GitHub Actions CI: .NET build/test/format, frontend build, integration tests
-- Governance docs: README, CONTRIBUTING, CODE_OF_CONDUCT, SECURITY, SUPPORT
-- Architecture Decision Records (ADR-001 through ADR-007)
-- Architecture documentation
+- API-key authentication for log/metric/trace ingestion (`X-Api-Key` or `Bearer sent_*`)
+- RBAC permission policies enforced per API feature group
+- Production configuration validation (JWT secrets, CORS, ingestion auth, seeded admin)
+- `POST /api/v1/alerts/executions/{id}/silence` and `GET /api/v1/alerts/executions`
+- `PATCH /api/v1/plugins/{id}` toggle endpoint
+- `PATCH /api/v1/incidents/{id}` partial update endpoint
+- CodeQL security scanning workflow
+- CI gate for vulnerable NuGet packages (`dotnet list package --vulnerable`)
+- Helm chart v0.7.0 and release pipeline
 
 ### Changed
 
-- N/A (initial release)
+- Frontend aligned to backend API contracts (alert rules/executions, plugin status, incident fields)
+- API enums serialized as camelCase strings (integers still accepted on input)
+- CORS restricted to configured origins in production; permissive only in Development
+- Open registration and default admin seeding gated behind `Security` config flags
+- Release workflow integration tests are now blocking
 
 ### Fixed
 
-- N/A (initial release)
+- Frontend/backend mismatches for alerts, plugins, and incidents
+- `release.yml` masking integration test failures with `continue-on-error`
 
-## [0.1.0] — TBD
+## [0.1.0] — 2026-03-01
 
-First public release. See [ROADMAP.md](ROADMAP.md) for planned features.
+Initial public scaffolding: .NET 10 API, React frontend, Docker Compose stack, JWT auth, and CI pipeline.
 
-[Unreleased]: https://github.com/sentinel-observability/sentinel/compare/v0.1.0...HEAD
-[0.1.0]: https://github.com/sentinel-observability/sentinel/releases/tag/v0.1.0
+[Unreleased]: https://github.com/nrzz/Sentinel/compare/v0.7.0...HEAD
+[0.7.0]: https://github.com/nrzz/Sentinel/compare/v0.1.0...v0.7.0
+[0.1.0]: https://github.com/nrzz/Sentinel/releases/tag/v0.1.0

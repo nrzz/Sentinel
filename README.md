@@ -91,8 +91,17 @@ Sentinel/
 ├── tests/
 │   ├── Sentinel.UnitTests/
 │   ├── Sentinel.IntegrationTests/
+│   ├── Sentinel.E2E/
 │   └── Sentinel.Benchmarks/
+├── cli/                       # Sentinel CLI
+├── sdk/                       # Client SDKs (dotnet, go, node, python)
+├── plugins/                   # Plugin SDK and sample plugins
+├── examples/                  # Log shipper examples (dotnet, node, python)
+├── benchmarks/                # k6 load-test scenarios
 ├── docker/                    # Dockerfiles and compose
+├── kubernetes/                # Helm chart and Argo CD manifests
+├── scripts/                   # Backup and chaos scripts
+├── security/                  # Threat model and OWASP ASVS checklist
 ├── design/adr/                # Architecture Decision Records
 └── docs/                      # Documentation
 ```
@@ -103,6 +112,8 @@ Sentinel/
 - [Deployment](docs/deployment.md)
 - [Operations](docs/operations.md)
 - [Disaster Recovery](docs/disaster-recovery.md)
+- [CLI Guide](docs/cli-guide.md)
+- [SDK Guide](docs/sdk-guide.md)
 - [Contributing](CONTRIBUTING.md)
 - [Roadmap](ROADMAP.md)
 - [Changelog](CHANGELOG.md)

@@ -4,10 +4,20 @@ Sentinel provides official client libraries for .NET, Node.js, Go, and Python. A
 
 ## Installation
 
-### .NET
+The SDKs are not published to NuGet, npm or PyPI yet. Install them from this repository. Packages with similar names on the public registries are not part of this project, so do not install those.
+
+Clone the repository once:
 
 ```bash
-dotnet add package Sentinel.Sdk
+git clone https://github.com/nrzz/Sentinel.git
+```
+
+### .NET
+
+From your own project folder, reference the SDK project in the clone:
+
+```bash
+dotnet add reference Sentinel/sdk/dotnet/Sentinel.Sdk/Sentinel.Sdk.csproj
 ```
 
 For local development in this repository:
@@ -18,20 +28,32 @@ dotnet add reference ../../sdk/dotnet/Sentinel.Sdk/Sentinel.Sdk.csproj
 
 ### Node.js
 
+Build the SDK in the clone, then install it into your project by path:
+
 ```bash
-npm install @sentinel/sdk
+npm install --prefix Sentinel/sdk/node
+npm run build --prefix Sentinel/sdk/node
+npm install ./Sentinel/sdk/node
 ```
 
 ### Go
 
+The module lives in this repository, so no clone is needed:
+
 ```bash
-go get github.com/sentinel-observability/sentinel-go
+go get github.com/nrzz/Sentinel/sdk/go@main
+```
+
+```go
+import sentinel "github.com/nrzz/Sentinel/sdk/go"
 ```
 
 ### Python
 
+pip can install straight from the repository:
+
 ```bash
-pip install sentinel-sdk
+pip install "git+https://github.com/nrzz/Sentinel.git#subdirectory=sdk/python"
 ```
 
 ## Quick Start
@@ -44,7 +66,7 @@ using Sentinel.Sdk.Models;
 
 var client = new SentinelClient(new SentinelClientOptions
 {
-    BaseUrl = "http://localhost:5000"
+    BaseUrl = "http://localhost:5018"
 });
 
 var auth = await client.LoginAsync(new LoginRequest("user@example.com", "password"));
@@ -63,7 +85,7 @@ var logs = await client.SearchLogsAsync(new LogSearchQuery(Query: "completed", L
 ```typescript
 import { SentinelClient } from '@sentinel/sdk';
 
-const client = new SentinelClient({ baseUrl: 'http://localhost:5000' });
+const client = new SentinelClient({ baseUrl: 'http://localhost:5018' });
 await client.login({ email: 'user@example.com', password: 'password' });
 
 await client.ingestLogs([
@@ -76,7 +98,7 @@ const logs = await client.searchLogs({ query: 'completed', limit: 20 });
 ### Go
 
 ```go
-client := sentinel.NewClient(sentinel.ClientOptions{BaseURL: "http://localhost:5000"})
+client := sentinel.NewClient(sentinel.ClientOptions{BaseURL: "http://localhost:5018"})
 auth, err := client.Login(ctx, sentinel.LoginRequest{
     Email:    "user@example.com",
     Password: "password",
@@ -92,7 +114,7 @@ _, err = client.IngestLogs(ctx, []sentinel.LogEntryInput{
 ```python
 from sentinel_sdk import LogEntryInput, LoginRequest, SentinelClient
 
-client = SentinelClient(base_url="http://localhost:5000")
+client = SentinelClient(base_url="http://localhost:5018")
 client.login(LoginRequest(email="user@example.com", password="password"))
 
 client.ingest_logs([

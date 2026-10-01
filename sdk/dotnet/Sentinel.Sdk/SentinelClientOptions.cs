@@ -2,7 +2,7 @@ namespace Sentinel.Sdk;
 
 public sealed class SentinelClientOptions
 {
-    public const string DefaultBaseUrl = "http://localhost:5000";
+    public const string DefaultBaseUrl = "http://localhost:5018";
 
     public string BaseUrl { get; set; } = DefaultBaseUrl;
     public string? AccessToken { get; set; }

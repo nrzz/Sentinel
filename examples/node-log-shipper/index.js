@@ -1,6 +1,6 @@
 import { SentinelClient } from '@sentinel/sdk';
 
-const baseUrl = process.env.SENTINEL_BASE_URL ?? 'http://localhost:5000';
+const baseUrl = process.env.SENTINEL_BASE_URL ?? 'http://localhost:5018';
 const service = process.env.SENTINEL_SERVICE ?? 'node-log-shipper';
 const environment = process.env.SENTINEL_ENVIRONMENT ?? 'development';
 

@@ -21,7 +21,7 @@ dotnet run --project cli/Sentinel.CLI -- --help
 
 | Option | Default | Description |
 |--------|---------|-------------|
-| `--base-url` | `http://localhost:5000` | Sentinel API base URL |
+| `--base-url` | `http://localhost:5018` | Sentinel API base URL |
 | `--output` | `json` | Output format: `json` or `yaml` |
 
 ## Authentication
@@ -104,7 +104,7 @@ Example structure:
 
 ```json
 {
-  "baseUrl": "http://localhost:5000",
+  "baseUrl": "http://localhost:5018",
   "accessToken": "<jwt>",
   "refreshToken": "<refresh>",
   "tenantId": "<guid>",

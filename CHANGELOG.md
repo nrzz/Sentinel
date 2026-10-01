@@ -7,6 +7,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+
+- Go SDK module path is now `github.com/nrzz/Sentinel/sdk/go`, so `go get` resolves from this repository
+
+### Fixed
+
+- SDK, CLI and example defaults point at the API's default port (`http://localhost:5018`) instead of `5000`
+- SDK guide installs the SDKs from this repository instead of unpublished registry packages
+
 ## [0.7.0] — 2026-07-09
 
 ### Added

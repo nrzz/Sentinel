@@ -3,7 +3,7 @@ import sys
 
 from sentinel_sdk import LogEntryInput, LoginRequest, SentinelClient
 
-BASE_URL = os.getenv("SENTINEL_BASE_URL", "http://localhost:5000")
+BASE_URL = os.getenv("SENTINEL_BASE_URL", "http://localhost:5018")
 SERVICE = os.getenv("SENTINEL_SERVICE", "python-log-shipper")
 ENVIRONMENT = os.getenv("SENTINEL_ENVIRONMENT", "development")
 

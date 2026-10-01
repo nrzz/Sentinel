@@ -1,7 +1,7 @@
 package sentinel
 
 const (
-	DefaultBaseURL       = "http://localhost:5000"
+	DefaultBaseURL       = "http://localhost:5018"
 	DefaultTenantHeader  = "X-Tenant-ID"
 	DefaultTimeout       = 30
 	DefaultMaxRetryCount = 3

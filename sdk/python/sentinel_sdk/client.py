@@ -27,7 +27,7 @@ from sentinel_sdk.models import (
 
 T = TypeVar("T")
 
-DEFAULT_BASE_URL = "http://localhost:5000"
+DEFAULT_BASE_URL = "http://localhost:5018"
 DEFAULT_TENANT_HEADER = "X-Tenant-ID"
 DEFAULT_TIMEOUT = 30.0
 DEFAULT_MAX_RETRIES = 3

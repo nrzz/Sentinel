@@ -11,7 +11,7 @@ metadata:
 spec:
   project: default
   source:
-    repoURL: https://github.com/your-org/sentinel.git
+    repoURL: https://github.com/nrzz/Sentinel.git
     targetRevision: main
     path: kubernetes/helm/sentinel
     helm:

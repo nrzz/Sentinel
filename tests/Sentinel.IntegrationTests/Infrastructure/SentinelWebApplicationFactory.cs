@@ -17,6 +17,7 @@ public class SentinelWebApplicationFactory : WebApplicationFactory<Program>
 {
     public InMemoryLogRepository LogRepository { get; } = new();
     public InMemoryAlertRepository AlertRepository { get; } = new();
+    public InMemoryRefreshTokenStore RefreshTokenStore { get; } = new();
 
     protected override void ConfigureWebHost(IWebHostBuilder builder)
     {
@@ -51,6 +52,7 @@ public class SentinelWebApplicationFactory : WebApplicationFactory<Program>
             services.AddSingleton(LogRepository);
             services.AddSingleton<ILogRepository>(LogRepository);
             services.AddSingleton<IRabbitMqPublisher>(new InMemoryRabbitMqPublisher(LogRepository));
+            services.AddSingleton(RefreshTokenStore);
             services.AddSingleton<IAuthService, TestAuthService>();
             services.AddSingleton(AlertRepository);
             services.AddSingleton<IAlertRepository>(AlertRepository);
@@ -84,6 +86,6 @@ public class SentinelWebApplicationFactory : WebApplicationFactory<Program>
     {
         LogRepository.Clear();
         AlertRepository.Clear();
-        TestAuthService.Reset();
+        RefreshTokenStore.Clear();
     }
 }

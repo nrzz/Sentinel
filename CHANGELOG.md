@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Security
+
+- An incoming `X-Correlation-ID` is accepted only when it is 1 to 64 characters of ASCII letters, digits, `-`, `_`, `.` or `:`; anything else is replaced with a generated id, so a caller can no longer put line breaks or other control characters into log entries (CodeQL `cs/log-forging`)
+
 ### Changed
 
 - Go SDK module path is now `github.com/nrzz/Sentinel/sdk/go`, so `go get` resolves from this repository

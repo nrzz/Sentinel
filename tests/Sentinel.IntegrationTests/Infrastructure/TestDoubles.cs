@@ -167,14 +167,31 @@ public sealed class InMemoryRabbitMqPublisher : IRabbitMqPublisher
     public ValueTask DisposeAsync() => ValueTask.CompletedTask;
 }
 
+/// <summary>
+/// Holds the refresh tokens issued by <see cref="TestAuthService"/>. Each test factory owns one instance, so test
+/// classes that run in parallel (each with its own factory) cannot clear one another's tokens.
+/// </summary>
+public sealed class InMemoryRefreshTokenStore
+{
+    private readonly ConcurrentDictionary<string, string> _userIdsByToken = new();
+
+    public void Save(string refreshToken, string userId) => _userIdsByToken[refreshToken] = userId;
+
+    public bool TryGetUserId(string refreshToken, out string? userId) =>
+        _userIdsByToken.TryGetValue(refreshToken, out userId);
+
+    public void Clear() => _userIdsByToken.Clear();
+}
+
 public sealed class TestAuthService : IAuthService
 {
     private readonly IJwtTokenService _jwtTokenService;
-    private static readonly Dictionary<string, string> RefreshTokens = new();
+    private readonly InMemoryRefreshTokenStore _refreshTokens;
 
-    public TestAuthService(IJwtTokenService jwtTokenService)
+    public TestAuthService(IJwtTokenService jwtTokenService, InMemoryRefreshTokenStore refreshTokens)
     {
         _jwtTokenService = jwtTokenService;
+        _refreshTokens = refreshTokens;
     }
 
     public Task<AuthResult?> LoginAsync(string email, string password, Guid? tenantId, CancellationToken cancellationToken = default)
@@ -207,7 +224,7 @@ public sealed class TestAuthService : IAuthService
 
     public Task<AuthResult?> RefreshAsync(string refreshToken, CancellationToken cancellationToken = default)
     {
-        if (!RefreshTokens.TryGetValue(refreshToken, out var userId)
+        if (!_refreshTokens.TryGetUserId(refreshToken, out var userId)
             || userId != TestData.AdminUserId.ToString())
         {
             return Task.FromResult<AuthResult?>(null);
@@ -227,7 +244,7 @@ public sealed class TestAuthService : IAuthService
     private AuthResult CreateResult(AuthenticatedUser user)
     {
         var tokens = _jwtTokenService.GenerateTokens(user);
-        RefreshTokens[tokens.RefreshToken] = user.UserId.ToString();
+        _refreshTokens.Save(tokens.RefreshToken, user.UserId.ToString());
         return new AuthResult(
             new AuthTokens(tokens.AccessToken, tokens.RefreshToken, tokens.AccessTokenExpiresAt),
             new AuthUserInfo(
@@ -238,8 +255,6 @@ public sealed class TestAuthService : IAuthService
                 user.Roles,
                 user.Permissions));
     }
-
-    public static void Reset() => RefreshTokens.Clear();
 }
 
 public sealed class InMemoryAlertRepository : IAlertRepository

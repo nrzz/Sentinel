@@ -1,0 +1,48 @@
+version: 2
+updates:
+  - package-ecosystem: nuget
+    directory: /
+    schedule:
+      interval: weekly
+    open-pull-requests-limit: 10
+    ignore:
+      # Swashbuckle.AspNetCore 11 is built on Microsoft.OpenApi 3.x, and
+      # Microsoft.AspNetCore.OpenApi 10 allows only [2.12.2, 3.0.0).
+      # Take it together with ASP.NET Core 11 (DECISIONS.md, 2026-11-19).
+      - dependency-name: Swashbuckle.AspNetCore
+        versions: [">= 11"]
+
+  - package-ecosystem: npm
+    directory: /src/sentinel-web
+    schedule:
+      interval: weekly
+    open-pull-requests-limit: 5
+    groups:
+      # React 19 will not start when react and react-dom differ (error #527),
+      # so the React packages always move together.
+      react:
+        patterns:
+          - react
+          - react-dom
+          - "@types/react"
+          - "@types/react-dom"
+    ignore:
+      # The web app runs on Node 22 (CI's NODE_VERSION, docker/Dockerfile.web),
+      # so @types/node stays on 22.x. Remove this when the runtime moves.
+      - dependency-name: "@types/node"
+        versions: [">= 23"]
+      # TypeScript 7 drops baseUrl, which tsconfig.json uses (the 7.0.2 pull
+      # request was closed for it on 15 Oct). Move the paths off baseUrl first.
+      - dependency-name: typescript
+        versions: [">= 7"]
+
+  - package-ecosystem: npm
+    directory: /sdk/node
+    schedule:
+      interval: weekly
+    open-pull-requests-limit: 5
+
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: weekly

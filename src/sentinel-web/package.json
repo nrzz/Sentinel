@@ -15,7 +15,7 @@
     "@tanstack/react-virtual": "^3.14.26",
     "react": "^19.3.1",
     "react-dom": "^19.3.1",
-    "react-router-dom": "^7.4.0",
+    "react-router-dom": "^7.18.5",
     "recharts": "^3.10.1",
     "zustand": "^5.1.0"
   },

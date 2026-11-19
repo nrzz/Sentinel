@@ -11,6 +11,12 @@ updates:
       # Take it together with ASP.NET Core 11 (DECISIONS.md, 2026-11-19).
       - dependency-name: Swashbuckle.AspNetCore
         versions: [">= 11"]
+      # Sentinel targets net10.0: the Microsoft.Extensions and Microsoft.AspNetCore
+      # packages stay on the 10.x line until the move to .NET 11.
+      - dependency-name: "Microsoft.Extensions.*"
+        versions: [">= 11"]
+      - dependency-name: "Microsoft.AspNetCore.*"
+        versions: [">= 11"]
 
   - package-ecosystem: npm
     directory: /src/sentinel-web
@@ -35,6 +41,10 @@ updates:
       # request was closed for it on 15 Oct). Move the paths off baseUrl first.
       - dependency-name: typescript
         versions: [">= 7"]
+      # The SignalR client stays on the major of the server it talks to
+      # (ASP.NET Core 10).
+      - dependency-name: "@microsoft/signalr"
+        versions: [">= 11"]
 
   - package-ecosystem: npm
     directory: /sdk/node
